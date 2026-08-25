@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Outer wrapper
+ max-w-6xl caps the width so it doesn't stretch edge-to-edge on a wide screen
+-->
+<div class="max-w-6xl mx-auto space-y-6">
+
+
+  <!-- Small gray label, then the big card: white background, rounded corners, thin border, padding on all sides. Same space-y-6 trick again — everything inside this card (header, tabs, cards, table) gets even vertical spacing without you touching each piece. -->
+  <div class="text-[50px] text-gray-500">
+    JungleTrek : project tracker
+  </div>
+
+  <div class="bg-white rounded-xl border p-6 space-y-6">
+
+
+
+
+    <!-- flex justify-between is the "one thing left, one thing right" pattern — the logo group goes left, button goes right, and the space between them fills automatically. items-center keeps them vertically aligned. The logo group is its own small flex row for the blue square icon + text label, joined by gap-2 for spacing. -->
+    <div class="flex items-center justify-between">
+
+
+      <div class="flex items-center gap-2">
+        <span class="font-medium text-lg">안녕하세요 도하님!</span>
+      </div>
+
+      <button class="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm">+ New Project</button>
+    </div>
+
+
+
+    <div class="flex gap-6 border-b">
+      <button class="pb-2 border-b-2 border-emerald-600 text-emerald-600 font-medium">Ongoing</button>
+      <button class="pb-2 text-gray-400">Completed</button>
+    </div>
+
+
+
+
+    <div class="grid grid-cols-3 gap-4">
+
+
+      <!-- 카드예시 1 ██████████████████████████████████████████████████████████████████ -->
+      <div class="project-card border-2 bg-emerald-50 rounded-xl p-4 space-y-3 cursor-pointer"
+        data-project="pipeline-improvement">
+        <div class="flex items-center justify-between">
+          <span class="font-medium">CI/CD 파이프라인 개선</span>
+        </div>
+        <div class="flex gap-2 text-xs">
+          <span class="bg-white border rounded-full px-2 py-1">기간 : 08.10 - 09.30</span>
+        </div>
+        <div class="flex -space-x-2">
+          <div class="w-6 h-6 rounded-full bg-gray-300 border-2 border-white"></div>
+          <div class="w-6 h-6 rounded-full bg-gray-300 border-2 border-white"></div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-1.5">
+          <div class="bg-emerald-600 h-1.5 rounded-full" style="width:40%"></div>
+        </div>
+      </div>
+
+
+
+      <!-- 카드예시 2 ██████████████████████████████████████████████████████████████████ -->
+      <div class="project-card border rounded-xl p-4 space-y-3 cursor-pointer" data-project="login&signup-revamp">
+        <div class="font-medium">로그인/회원가입 시스템 개편</div>
+        <div class="flex gap-2 text-xs">
+          <span class="bg-gray-50 border rounded-full px-2 py-1"> 기간 : 09.01 - 10.15</span>
+        </div>
+        <div class="flex -space-x-2">
+          <div class="w-6 h-6 rounded-full bg-gray-300 border-2 border-white"></div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-1.5">
+          <div class="bg-emerald-600 h-1.5 rounded-full" style="width:15%"></div>
+        </div>
+      </div>
+
+
+      <!-- 카드예시 3 ██████████████████████████████████████████████████████████████████ -->
+      <div class="project-card border rounded-xl p-4 space-y-3 cursor-pointer" data-project="notification-setup">
+        <div class="flex items-center justify-between">
+          <span class="font-medium">알림 센터 구축</span>
+        </div>
+        <div class="flex gap-2 text-xs">
+
+          <span class="bg-gray-50 border rounded-full px-2 py-1">기간 : 07.20 - 08.31</span>
+        </div>
+        <div class="flex -space-x-2">
+          <div class="w-6 h-6 rounded-full bg-gray-300 border-2 border-white"></div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-1.5">
+          <div class="bg-emerald-600 h-1.5 rounded-full" style="width:70%"></div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+    <!-- 대시보드 ██████████████████████████████████████████████████████████████████ -->
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-lg">Task Dashboard</span>
+        <button class="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm">+ New Task</button>
+      </div>
+
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-gray-400 border-b">
+            <th class="py-2 w-10"></th>
+            <th class="py-2 w-10">No.</th>
+            <th class="py-2">Agenda</th>
+            <th class="py-2">Due Date</th>
+            <th class="py-2">Owner</th>
+            <th class="py-2">Status</th>
+          </tr>
+        </thead>
+
+
+
+
+
+
+        <!-- 플젝예시 1 ██████████████████████████████████████████████████████████████████ -->
+        <tbody data-project="pipeline-improvement">
+          <tr class="border-b">
+            <td class="py-3"><input type="checkbox"></td>
+            <td class="py-3 text-gray-400">01</td>
+            <td class="py-3">CI/CD 파이프라인 개선 Test Agenda</td>
+            <td class="py-3">08.14</td>
+            <td class="py-3">안다빈</td>
+            <td class="py-3"><span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Done</span></td>
+          </tr>
+        </tbody>
+
+        <!-- 플젝예시 2 ██████████████████████████████████████████████████████████████████ -->
+        <tbody data-project="login&signup-revamp" class="hidden">
+          <tr class="border-b">
+            <td class="py-3"><input type="checkbox"></td>
+            <td class="py-3 text-gray-400">02</td>
+            <td class="py-3">로그인/회원가입 시스템 개편 Test Agenda</td>
+            <td class="py-3">08.14</td>
+            <td class="py-3">안다빈</td>
+            <td class="py-3"><span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Done</span></td>
+          </tr>
+        </tbody>
+
+
+        <!-- 플젝예시 3 ██████████████████████████████████████████████████████████████████ -->
+        <tbody data-project="notification-setup" class="hidden">
+          <tr class="border-b">
+            <td class="py-3"><input type="checkbox"></td>
+            <td class="py-3 text-gray-400">03</td>
+            <td class="py-3">알림센터 구축 Test Agenda</td>
+            <td class="py-3">08.14</td>
+            <td class="py-3">안다빈</td>
+            <td class="py-3"><span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Done</span></td>
+          </tr>
+        </tbody>
+
+
+
+      </table>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+
+
+{% block scripts %}
+
+
+
+<script>
+
+  $(document).ready(function () {
+
+  });
+
+
+  $(".project-card").on("click", function () {
+    var projectId = $(this).data("project");
+
+    $(".project-card").removeClass("border-2 bg-emerald-50").addClass("border");
+    $(this).removeClass("border").addClass("border-2 bg-emerald-50");
+    $("tbody[data-project]").addClass("hidden");
+    $("tbody[data-project='" + projectId + "']").removeClass("hidden");
+  });
+</script>
+
+
+
+
+{% endblock %}
