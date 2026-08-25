@@ -12,6 +12,6 @@ uv add flask gunicorn
 
 로컬 서버 실행
 ```
-gunicorn --bind localhost:8000 app:app
-localhost:8000 접속
+uv run -- flask --app app run --debug
+localhost:5000 접속
 ```
