@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Outer wrapper
+ max-w-6xl caps the width so it doesn't stretch edge-to-edge on a wide screen
+-->
+<div class="max-w-6xl mx-auto space-y-6">
+
+
+    <!-- Small gray label, then the big card: white background, rounded corners, thin border, padding on all sides. Same space-y-6 trick again — everything inside this card (header, tabs, cards, table) gets even vertical spacing without you touching each piece. -->
+    <div class="text-[50px] text-gray-500">
+        JungleTrek : project tracker
+    </div>
+
+    <div class="bg-white rounded-xl border p-6 space-y-6">
+
+
+        <!-- flex justify-between is the "one thing left, one thing right" pattern — the logo group goes left, button goes right, and the space between them fills automatically. items-center keeps them vertically aligned. The logo group is its own small flex row for the blue square icon + text label, joined by gap-2 for spacing. -->
+        <div class="flex items-center justify-between">
+
+
+            <div class="flex items-center gap-2">
+                <span class="font-medium text-lg">안녕하세요 도하님!</span>
+            </div>
+
+            <button class="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm">+ New Project</button>
+        </div>
+
+
+
+        <div class="flex gap-6 border-b">
+            <button class="pb-2 border-b-2 border-emerald-600 text-emerald-600 font-medium">Ongoing</button>
+            <button class="pb-2 text-gray-400">Completed</button>
+        </div>
+
+
+        <div class="grid grid-cols-3 gap-4">
+            {% for p in projects %}
+            <div class="project-card border rounded-xl p-4 space-y-3 cursor-pointer {% if loop.first %}border-2 bg-emerald-50{% else %}border{% endif %}"
+                data-project="{{ p._id }}">
+                <div class="font-medium">{{ p.title }}</div>
+                ...
+            </div>
+            {% endfor %}
+        </div>
+
+
+        <!-- 대시보드 ██████████████████████████████████████████████████████████████████ -->
+
+        <div class="space-y-4">
+
+            <div class="flex items-center justify-between">
+                <span class="font-medium text-lg">Task Dashboard</span>
+
+                <div class="flex items-center gap-2">
+                    <button id="deleteTasksBtn"
+                        class="hidden items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+                        <span>🗑</span> Delete
+                    </button>
+                    <button id="newTaskBtn"
+                        class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+                        <span>+</span> New Task
+                    </button>
+                </div>
+            </div>
+
+
+
+
+
+
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left text-gray-400 border-b">
+                        <th class="py-2 w-10"></th>
+                        <th class="py-2 w-10">No.</th>
+                        <th class="py-2">Agenda</th>
+                        <th class="py-2">Due Date</th>
+                        <th class="py-2">Owner</th>
+                        <th class="py-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+
+
+
+        <!-- TASK MODAL ██████████████████████████████████████████████████████████████████ -->
+
+        <div id="taskModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center">
+            <div class="bg-white rounded-xl p-6 w-96 space-y-4">
+
+                <div class="flex justify-between items-center">
+                    <span class="font-medium text-lg">New Task</span>
+                    <button id="closeModalBtn" class="text-gray-400">✕</button>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Agenda</label>
+                    <input id="taskAgenda" placeholder="e.g. Write deploy script" class="border w-full p-2 rounded">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Due Date</label>
+                    <input id="taskDueDate" type="date" class="border w-full p-2 rounded">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Owner</label>
+                    <input id="taskOwner" placeholder="e.g. 안다빈" class="border w-full p-2 rounded">
+                </div>
+
+                <button id="submitTask" class="bg-emerald-500 text-white px-4 py-2 rounded-lg w-full">Add</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        console.log("READY FIRED");
+        // 1. figure out the default (mirrors what Jinja already picked)
+        let currentProjectId = $(".project-card").first().data("project");
+
+        // 2. for viewing different projects / reusable function
+        function loadTasks(projectId) {
+            $.ajax({
+                url: "/api/tasks/" + projectId,
+                method: "GET",
+                success: function (tasks) {
+                    $("tbody").empty(); // 1. clear old rows
+
+                    tasks.forEach(function (task, index) {  // 2. loop through each task
+                        $("tbody").append(buildTaskRow(task, index + 1));
+                    });
+                }
+            });
+        }
+
+
+
+
+        // 3. call it immediately "on page load"
+        loadTasks(currentProjectId);
+
+        // 4. Polling to check if others have updated tasks. 30000ms = 30 seconds
+        setInterval(function () {
+            const anyChecked = $("tbody input[type='checkbox']:checked").length > 0;
+            if (!anyChecked) {
+                loadTasks(currentProjectId);
+            }
+        }, 30000);
+
+
+        // 5. click handler, unchanged except it also calls loadTasks
+        $(".project-card").on("click", function () {
+            currentProjectId = $(this).data("project");
+            $(".project-card").removeClass("border-2 bg-emerald-50").addClass("border");
+            $(this).removeClass("border").addClass("border-2 bg-emerald-50");
+            loadTasks(currentProjectId);
+        });
+
+
+
+
+
+        // open modal
+        $("#newTaskBtn").on("click", function () {
+            if (!currentProjectId) {
+                alert("Select a project first");
+                return;
+            }
+            $("#taskModal").removeClass("hidden");
+        });
+
+        // close modal (cancel button, or clicking the dark overlay)
+        $("#closeModalBtn, #taskModal").on("click", function (e) {
+            if (e.target.id === "closeModalBtn" || e.target.id === "taskModal") {
+                $("#taskModal").addClass("hidden");
+                $("#taskModal input").val(""); // clear form fields on close
+            }
+        });
+
+        // stop clicks inside the modal box from bubbling up and closing it
+        $("#taskModal > div").on("click", function (e) {
+            e.stopPropagation();
+        });
+
+        $("#submitTask").on("click", function () {
+            addTask();
+        });
+
+
+
+        function addTask() {
+            const task = {
+                project_id: currentProjectId,
+                agenda: $("#taskAgenda").val(),
+                due_date: $("#taskDueDate").val(),
+                owner: $("#taskOwner").val(),
+                status: "not-started"   // pick ONE casing/format and use it everywhere
+            };
+
+            $.ajax({
+                url: "/api/tasks",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(task),
+                success: function (newTask) {
+                    const rowCount = $("tbody tr").length + 1;
+                    $("tbody").append(buildTaskRow(newTask, rowCount));
+                    $("#taskModal").addClass("hidden");
+                    $("#taskModal input").val("");
+                }
+            });
+        }
+
+
+
+        <!-- show/hide the button, grey out selected rows -->
+        $(document).on("change", "tbody input[type='checkbox']", function () {
+            // grey out this specific row if checked
+            $(this).closest("tr").toggleClass("bg-gray-100", this.checked);
+
+            // show delete button only if at least one checkbox is checked
+            const anyChecked = $("tbody input[type='checkbox']:checked").length > 0;
+            $("#deleteTasksBtn").toggleClass("hidden", !anyChecked);
+        });
+
+
+
+        $("#deleteTasksBtn").on("click", function () {
+            const idsToDelete = [];
+
+            $("tbody input[type='checkbox']:checked").each(function () {
+                idsToDelete.push($(this).closest("tr").data("task-id"));
+            });
+
+            if (!confirm(`Delete ${idsToDelete.length} task(s)?`)) return;
+
+            $.ajax({
+                url: "/api/tasks",
+                method: "DELETE",
+                contentType: "application/json",
+                data: JSON.stringify({ task_ids: idsToDelete }),
+                success: function () {
+                    $("tbody input[type='checkbox']:checked").closest("tr").remove();
+                    $("#deleteTasksBtn").addClass("hidden");
+                }
+            });
+        });
+
+
+        $(document).on("blur", ".task-field", function () {
+            const taskId = $(this).closest("tr").data("task-id");
+            const field = $(this).data("field");
+            const value = $(this).val();
+
+            $.ajax({
+                url: "/api/tasks/" + taskId,
+                method: "PATCH",
+                contentType: "application/json",
+                data: JSON.stringify({ [field]: value })
+            });
+        });
+
+    });
+
+
+
+
+    function buildTaskRow(task, index) {
+        return `
+    <tr class="border-b" data-task-id="${task._id}">
+      <td class="py-3 pl-3"><input type="checkbox"></td>
+      <td class="py-3 text-gray-400">${index}</td> 
+      <td class="py-3">${task.agenda}</td>
+      <td class="py-3">${task.due_date}</td>
+      <td class="py-3">${task.owner}</td>
+      <td class="py-3">
+        <select class="rounded-full border-0 px-3 py-1 text-xs font-medium" onchange="updateStatusColor(this)">
+          <option value="not-started" ${task.status === "Not started" ? "selected" : ""}>Not started</option>
+          <option value="in-progress" ${task.status === "In progress" ? "selected" : ""}>In progress</option>
+          <option value="done" ${task.status === "Done" ? "selected" : ""}>Done</option>
+        </select>
+      </td>
+    </tr>
+  `;
+    }
+
+
+
+
+
+    function updateStatusColor(select) {
+        select.classList.remove(
+            "bg-red-100", "text-red-700",
+            "bg-yellow-100", "text-yellow-700",
+            "bg-green-100", "text-green-700"
+        );
+
+        const colors = {
+            "not-started": ["bg-red-100", "text-red-700"],
+            "in-progress": ["bg-yellow-100", "text-yellow-700"],
+            "done": ["bg-green-100", "text-green-700"]
+        };
+
+        select.classList.add(...colors[select.value]);
+    }
+
+
+</script>
+{% endblock %}
