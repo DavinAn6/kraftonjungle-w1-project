@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>프로젝트 생성</h1>
+
+<form method="post" action="/create">
+
+    <label for="title">프로젝트 타이틀</label>
+    <input type="text" id="title" name="title">
+
+    <label for="team">팀명</label>
+    <input type="text" id="team" name="team">
+
+    <label for="description">프로젝트 정보</label>
+    <textarea id="description" name="description"></textarea>
+
+    <fieldset>
+        <legend>프로젝트 기간</legend>
+        <label for="start_date">시작일</label>
+        <input type="date" id="start_date" name="start_date">
+        <label for="end_date">종료일</label>
+        <input type="date" id="end_date" name="end_date">
+    </fieldset>
+
+    <fieldset>
+        <legend>팀원 관리</legend>
+        <input type="text" id="search-box">
+        <button type="button" id="search-member">팀원 검색</button>
+        <div id="search-result"></div>
+        <div id="added-member"></div>
+    </fieldset>
+    <button type="submit" id="submit-btn">프로젝트 생성</button>
+</form>
+<script src="{{url_for('static', filename='create.js')}}"></script>
+
+{% endblock %}
