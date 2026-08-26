@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block content %}
 <h1>프로젝트 생성</h1>
 
@@ -33,6 +34,6 @@
 </form>
 <script>const initialMembers = {{ project.members | tojson if project else '[]' }};
 </script>
-<script src="{{url_for('static', filename='create.js')}}"></script>
+<script src="{{url_for('static', filename='js/create.js')}}"></script>
 
 {% endblock %}

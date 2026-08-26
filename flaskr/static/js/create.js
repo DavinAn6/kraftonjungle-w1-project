@@ -11,19 +11,18 @@ const searchbox = $("#search-box")
 const searchResult = $("#search-result")
 
 //필수 입력 필드 다 채워졌는지 확인하고 버튼 상태 결정 (필수 입력: 프로젝트 타이틀, 기간)
-function checkRequiredFields() 
-{
+function checkRequiredFields() {
 const isTitleFilled = $("#title").val().trim() !== "";
 const isStartDateFilled = $("#start_date").val().trim() !== "";
 const isEndDateFilled  = $("#end_date").val().trim() !== "";
 
-if (isTitleFilled && isStartDateFilled && isEndDateFilled) {
-    submitBtn.prop("disabled", false)
-} 
-else { 
-   submitBtn.prop("disabled", true)
+    if (isTitleFilled && isStartDateFilled && isEndDateFilled) {
+        submitBtn.prop("disabled", false)
+    }
+    else {
+        submitBtn.prop("disabled", true)
+    }
 }
-} 
 titleInput.on("input", checkRequiredFields)
 startDateInput.on("input", checkRequiredFields) 
 startDateInput.on("input", function() {
@@ -41,7 +40,7 @@ function searchMember() {
     $.ajax({
         url: url,
         method: "GET",
-        success: function(data) {
+        success: function (data) {
             lastSearchedResults = data
             renderSearchResults()
         }
@@ -61,18 +60,18 @@ function renderSearchResults() {
     }
 }
 
-function handleKeydown(event) { 
+function handleKeydown(event) {
     if (event.key == "Enter") {
         event.preventDefault()
         searchMember()
     }
-    }
+}
 
 
 function addMember(name, email) {
     selectedMembers.push({ name: name, email: email })
     renderSelectedMembers()
-    renderSearchResults()  
+    renderSearchResults()
 }
 
 function renderSelectedMembers() {
@@ -87,7 +86,7 @@ function renderSelectedMembers() {
 function removeMember(email) {
     selectedMembers = selectedMembers.filter(member => member.email !== email)
     renderSelectedMembers()
-    renderSearchResults()  
+    renderSearchResults()
 }
 
 searchBTN.on("click", searchMember)

@@ -2,11 +2,13 @@ import json
 from bson.objectid import ObjectId
 from flask import Blueprint, render_template, request, jsonify
 from db import get_db
+
 db = get_db()
 projects = db["projects"]
 users = db["users"]
 
 create = Blueprint("create", __name__)
+
 
 @create.route("/create", methods=["GET", "POST"])
 def create_project():
@@ -31,17 +33,20 @@ def create_project():
         """
     return render_template("create.html")
 
+
 @create.route("/api/users/search")
 def search_member():
     search_member = request.args.get("search_member")
     results = users.find(
         {
-                "$or": [
-                    {"name":{"$regex" : search_member,"$options": "i"}}, 
-                    {"email":{"$regex": search_member, "$options":"i"}} ]
-            }
+            "$or": [
+                {"name": {"$regex": search_member, "$options": "i"}},
+                {"email": {"$regex": search_member, "$options": "i"}},
+            ]
+        }
     )
-    
+
     user_list = []
-    for user in results: user_list.append({"name" : user.get("name"), "email" : user.get("email")})
+    for user in results:
+        user_list.append({"name": user.get("name"), "email": user.get("email")})
     return jsonify(user_list)
