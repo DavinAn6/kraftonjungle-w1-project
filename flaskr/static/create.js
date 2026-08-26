@@ -25,7 +25,10 @@ else {
 }
 } 
 titleInput.on("input", checkRequiredFields)
-startDateInput.on("input", checkRequiredFields)
+startDateInput.on("input", checkRequiredFields) 
+startDateInput.on("input", function() {
+    endDateInput.attr("min", startDateInput.val())
+})
 endDateInput.on("input", checkRequiredFields)
 
 checkRequiredFields();
