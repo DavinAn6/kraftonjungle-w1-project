@@ -47,7 +47,6 @@ def get_tasks(project_id):
 def add_task():
     data = request.get_json()
 
-
     # Validation Check —————————————————————————————————————————————
     # 1) Is the request actually contain JSON data? Or did someone send empty or broken request?
     if not data: 
@@ -118,6 +117,16 @@ def delete_tasks():
 @login_required
 def update_task(task_id):
     data = request.get_json()
+    
+    # Validation Check ——————————————————————————————————————————————————————
+    # 1) 
+    
+    
+    
+    
+    
+    
+    
 
     # only update fields that were actually sent
     allowed_fields = ["agenda", "due_date", "owner", "status"]

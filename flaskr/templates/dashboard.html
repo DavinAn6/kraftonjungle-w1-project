@@ -8,7 +8,6 @@
 -->
 <div class="max-w-6xl mx-auto space-y-6">
 
-
     <!-- Small gray label, then the big card: white background, rounded corners, thin border, padding on all sides. Same space-y-6 trick again — everything inside this card (header, tabs, cards, table) gets even vertical spacing without you touching each piece. -->
     <img src="{{ url_for('static', filename='JungleTrek Logo.png')}}" class="w-full rounded-x1 mb-6"
         alt="JungleTrek Banner">
@@ -24,7 +23,7 @@
                 <span class="text-[30px] text-gray-500">안녕하세요, {{ name }}님!</span>
             </div>
 
-            <a id="newTaskBtn"
+            <a id="newProjectBtn"
                 class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
                 <span>+</span> New Project
             </a>
@@ -131,6 +130,10 @@
 
 
 
+
+
+
+
 {% block scripts %}
 <script>
     $(document).ready(function () {
@@ -180,7 +183,6 @@
 
 
 
-
         // open modal
         $("#newTaskBtn").on("click", function () {
             if (!currentProjectId) {
@@ -218,11 +220,10 @@
                 return;
             }
             // 2) In case user input is invalid 
-            if (!task.agenda || !task.due_date || !taskk.oowner) {
+            if (!task.agenda || !task.due_date || !task.owner) {
                 alert("모든 항목을 기재해주세요.");
                 return;
             }
-
 
             const task = {
                 project_id: currentProjectId,
@@ -300,10 +301,6 @@
             });
         });
     });
-
-
-
-
 
 
 

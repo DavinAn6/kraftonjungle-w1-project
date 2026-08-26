@@ -27,36 +27,36 @@ project_info.insert_many([
         "_id": id_pipeline,
         "title": "프로젝트 1 : 인원 안다빈",
         "members": ["안다빈"],
-        "start_date": "08.10",
-        "end_date": "09.30"
+        "start_date": "2026-01-01",
+        "end_date": "2026-01-01"
     },
     {
         "_id": id_login,
         "title": "프로젝트 2 : 인원 양웅진",
         "members": ["양웅진"],
-        "start_date": "09.01",
-        "end_date": "10.15"
+        "start_date": "2026-01-01",
+        "end_date": "2026-01-01"
     },
     {
         "_id": id_notification,
         "title": "프로젝트 3 : 인원 안도하",
         "members": ["안도하"],
-        "start_date": "07.20",
-        "end_date": "08.31"
+        "start_date": "2026-01-01",
+        "end_date": "2026-01-01"
     },
     {
         "_id": id_test1,
         "title": "프로젝트 4 : 인원 안다빈 양웅진",
         "members": ["안다빈", "양웅진"],
-        "start_date": "07.20",
-        "end_date": "08.31"
+        "start_date": "2026-01-01",
+        "end_date": "2026-01-01"
     },
     {
         "_id": id_test2,
         "title": "프로젝트 5 : 인원 안도하 양웅진",
         "members": ["안도하", "양웅진"],
-        "start_date": "07.20",
-        "end_date": "08.31"
+        "start_date": "2026-01-01",
+        "end_date": "2026-01-01"
     }
 ])
 
@@ -65,42 +65,42 @@ tasks.insert_many([
     {
         "project_id": id_pipeline,
         "agenda": "CI/CD 파이프라인 개선 Test Agenda",
-        "due_date": "08.14",
+        "due_date": "2026-01-01",
         "owner": "안다빈",
         "status": "done"
     },
     {
         "project_id": id_pipeline,
         "agenda": "CI/CD 파이프라인 개선 Test Agenda1",
-        "due_date": "08.14",
+        "due_date": "2026-01-01",
         "owner": "안다빈",
         "status": "done"
     },
     {
         "project_id": id_pipeline,
         "agenda": "CI/CD 파이프라인 개선 Test Agenda2",
-        "due_date": "08.14",
+        "due_date": "2026-01-01",
         "owner": "안다빈",
         "status": "done"
     },
     {
         "project_id": id_pipeline,
         "agenda": "Test Agenda3",
-        "due_date": "08.14",
+        "due_date": "2026-01-01",
         "owner": "안다빈",
         "status": "done"
     },
     {
         "project_id": id_login,
         "agenda": "로그인/회원가입 시스템 개편 Test Agenda",
-        "due_date": "08.14",
+        "due_date": "2026-01-01",
         "owner": "안다빈",
         "status": "done"
     },
     {
         "project_id": id_notification,
         "agenda": "알림센터 구축 Test Agenda",
-        "due_date": "08.14",
+        "due_date": "2026-01-01",
         "owner": "안다빈",
         "status": "done"
     }
