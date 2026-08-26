@@ -8,9 +8,11 @@
 -->
 <div class="max-w-6xl mx-auto space-y-6">
 
+
     <!-- Small gray label, then the big card: white background, rounded corners, thin border, padding on all sides. Same space-y-6 trick again — everything inside this card (header, tabs, cards, table) gets even vertical spacing without you touching each piece. -->
-    <img src="{{ url_for('static', filename='JungleTrek Logo.png')}}" class="w-full rounded-x1 mb-6"
-        alt="JungleTrek Banner">
+    <div class="text-[50px] text-gray-500">
+        JungleTrek : project tracker
+    </div>
 
     <div class="bg-white rounded-xl border p-6 space-y-6">
 
@@ -20,13 +22,10 @@
 
 
             <div class="flex items-center gap-2">
-                <span class="text-[30px] text-gray-500">안녕하세요, {{ name }}님!</span>
+                <span class="font-medium text-lg">안녕하세요 도하님!</span>
             </div>
 
-            <a id="newProjectBtn"
-                class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
-                <span>+</span> New Project
-            </a>
+            <button class="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm">+ New Project</button>
         </div>
 
 
@@ -41,13 +40,8 @@
             {% for p in projects %}
             <div class="project-card border rounded-xl p-4 space-y-3 cursor-pointer {% if loop.first %}border-2 bg-emerald-50{% else %}border{% endif %}"
                 data-project="{{ p._id }}">
-                <div class="flex items-center justify-between">
-                    <span class="font-medium">{{ p.title }}</span>
-                    <a href="/project/{{ p._id }}" class="text-gray-400 hover:text-emerald-600 text-sm"
-                        onclick="event.stopPropogation();">
-                        ➡
-                    </a>
-                </div>
+                <div class="font-medium">{{ p.title }}</div>
+                ...
             </div>
             {% endfor %}
         </div>
@@ -71,6 +65,11 @@
                     </button>
                 </div>
             </div>
+
+
+
+
+
 
             <table class="w-full text-sm">
                 <thead>
@@ -125,21 +124,12 @@
 
 
 
-
-
-
-
 {% block scripts %}
 <script>
     $(document).ready(function () {
+        console.log("READY FIRED");
         // 1. figure out the default (mirrors what Jinja already picked)
         let currentProjectId = $(".project-card").first().data("project");
-
-        if (currentProjectId) {
-            loadTasks(currentProjectId);
-        } else {
-            $("tbody").empty();
-        }
 
         // 2. for viewing different projects / reusable function
         function loadTasks(projectId) {
@@ -151,12 +141,16 @@
 
                     tasks.forEach(function (task, index) {  // 2. loop through each task
                         $("tbody").append(buildTaskRow(task, index + 1));
-                        $("tbody select").each(function () { updateStatusColor(this) });
                     });
-                    $("#deleteTasksBtn").addClass("hidden");
                 }
             });
         }
+
+
+
+
+        // 3. call it immediately "on page load"
+        loadTasks(currentProjectId);
 
         // 4. Polling to check if others have updated tasks. 30000ms = 30 seconds
         setInterval(function () {
@@ -174,6 +168,7 @@
             $(this).removeClass("border").addClass("border-2 bg-emerald-50");
             loadTasks(currentProjectId);
         });
+
 
 
 
@@ -207,19 +202,6 @@
 
 
         function addTask() {
-
-            // Validation Check ———————————————————————————————————————————————————
-            // 1) In case there is no project 
-            if (!currentProjectId) {
-                alert("프로젝트를 먼저 추가해주세요.");
-                return;
-            }
-            // 2) In case user input is invalid 
-            if (!task.agenda || !task.due_date || !task.owner) {
-                alert("모든 항목을 기재해주세요.");
-                return;
-            }
-
             const task = {
                 project_id: currentProjectId,
                 agenda: $("#taskAgenda").val(),
@@ -236,13 +218,8 @@
                 success: function (newTask) {
                     const rowCount = $("tbody tr").length + 1;
                     $("tbody").append(buildTaskRow(newTask, rowCount));
-                    updateStatusColor($("tbody tr:last select")[0]);
                     $("#taskModal").addClass("hidden");
                     $("#taskModal input").val("");
-                },
-                // 3) If backend server responds with error, alert user
-                error: function (xhr) {
-                    alert(xhr.responseJSON?.error || "Something went wrong.");
                 }
             });
         }
@@ -295,8 +272,8 @@
                 data: JSON.stringify({ [field]: value })
             });
         });
-    });
 
+    });
 
 
 
@@ -304,55 +281,24 @@
     function buildTaskRow(task, index) {
         return `
     <tr class="border-b" data-task-id="${task._id}">
-       <td class="py-3 pl-3"><input type="checkbox"></td>
-       <td class="py-3 text-gray-400">${index}</td>
-      
-
-       <td class="py-3">
-            <input type="text" value="${task.agenda}" 
-            class="task-field bg-transparent border border-transparent hover:border-gray-300 focus:border-emerald-500 focus:bg-white rounded px-1 outline-none w-full"
-            data-field="agenda">
-       </td>
-       
-        <td class="py-3">
-            <input type="date" value="${task.due_date}" 
-            class="task-field bg-transparent border border-transparent hover:border-gray-300 focus:border-emerald-500 focus:bg-white rounded px-1 outline-none"
-            data-field="due_date" data-task-id="${task._id}">
-        </td>
-       
-       
-       <td class="py-3">
-            <input type="text" value="${task.owner}" 
-            class="task-field bg-transparent border border-transparent hover:border-gray-300 focus:border-emerald-500 focus:bg-white rounded px-1 outline-none w-full"
-            data-field="agenda">
-       </td>
-
-        <td class="py-3">
-            <select class="rounded-full border-0 px-3 py-1 text-xs font-medium" 
-                    onchange="updateStatusColor(this); updateTaskStatus(this);"
-                    data-task-id="${task._id}">
-                <option value="not-started" ${task.status === "not-started" ? "selected" : ""}>Not started</option>
-                <option value="in-progress" ${task.status === "in-progress" ? "selected" : ""}>In progress</option>
-                <option value="done" ${task.status === "done" ? "selected" : ""}>Done</option>
-            </select>
-        </td>
-       
+      <td class="py-3 pl-3"><input type="checkbox"></td>
+      <td class="py-3 text-gray-400">${index}</td> 
+      <td class="py-3">${task.agenda}</td>
+      <td class="py-3">${task.due_date}</td>
+      <td class="py-3">${task.owner}</td>
+      <td class="py-3">
+        <select class="rounded-full border-0 px-3 py-1 text-xs font-medium" onchange="updateStatusColor(this)">
+          <option value="not-started" ${task.status === "Not started" ? "selected" : ""}>Not started</option>
+          <option value="in-progress" ${task.status === "In progress" ? "selected" : ""}>In progress</option>
+          <option value="done" ${task.status === "Done" ? "selected" : ""}>Done</option>
+        </select>
+      </td>
     </tr>
   `;
     }
 
 
-    function updateTaskStatus(select) {
-        const taskId = $(select).data("task-id");
-        const newStatus = select.value;
 
-        $.ajax({
-            url: "/api/tasks/" + taskId,
-            method: "PATCH",
-            contentType: "application/json",
-            data: JSON.stringify({ status: newStatus })
-        });
-    }
 
 
     function updateStatusColor(select) {
