@@ -22,7 +22,7 @@
 
             <a href="/project/new"
                 class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
-                <span>+</span> New Project
+                <span>+</span> 새 프로젝트
             </a>
         </div>
 
@@ -66,7 +66,7 @@
         <div class="space-y-4">
 
             <div class="flex items-center justify-between">
-                <span class="font-bold text-lg">Task Dashboard</span>
+                <span class="font-bold text-lg">대시보드</span>
 
                 <div class="flex items-center gap-2">
                     <button id="deleteTasksBtn"
@@ -75,7 +75,7 @@
                     </button>
                     <button id="newTaskBtn"
                         class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
-                        <span>+</span> New Task
+                        <span>+</span> 항목 추가
                     </button>
                 </div>
             </div>
@@ -85,10 +85,10 @@
                     <tr class="text-left text-gray-400 border-b">
                         <th class="py-2 w-10"></th>
                         <th class="py-2 w-10">No.</th>
-                        <th class="py-2">Agenda</th>
-                        <th class="py-2">Due Date</th>
-                        <th class="py-2">Owner</th>
-                        <th class="py-2">Status</th>
+                        <th class="py-2">내용</th>
+                        <th class="py-2">기한</th>
+                        <th class="py-2">담당자</th>
+                        <th class="py-2">상태</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -109,23 +109,23 @@
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-sm font-medium text-gray-700">Agenda</label>
-                    <input id="taskAgenda" placeholder="e.g. Write deploy script" class="border w-full p-2 rounded">
+                    <label class="text-sm font-medium text-gray-700">내용</label>
+                    <input id="taskAgenda" placeholder="태스크 내용을 입력하세요" class="border w-full p-2 rounded">
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-sm font-medium text-gray-700">Due Date</label>
+                    <label class="text-sm font-medium text-gray-700">기한</label>
                     <input id="taskDueDate" type="date" class="border w-full p-2 rounded">
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-sm font-medium text-gray-700">Owner</label>
+                    <label class="text-sm font-medium text-gray-700">담당자</label>
                     <select id="taskOwner" class="border w-full p-2 rounded">
-                        <option value="">Select a member</option>
+                        <option value="">인원을 선택해주세요.</option>
                     </select>
                 </div>
 
-                <button id="submitTask" class="bg-emerald-500 text-white px-4 py-2 rounded-lg w-full">Add</button>
+                <button id="submitTask" class="bg-emerald-500 text-white px-4 py-2 rounded-lg w-full">추가</button>
             </div>
         </div>
 
@@ -135,7 +135,7 @@
         <form action="/logout" method="post" class="inline">
             <button onclick="logout()"
                 class="rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-black hover:bg-gray-700">
-                Logout
+                로그아웃
             </button>
         </form>
     </div>
@@ -204,7 +204,7 @@
         // open modal
         $("#newTaskBtn").on("click", function () {
             if (!currentProjectId) {
-                alert("Select a project first");
+                alert("프로젝트를 먼저 추가해주세요.");
                 return;
             }
             $("#taskModal").removeClass("hidden");
@@ -267,7 +267,7 @@
                     $("#taskModal input").val("");
                 },
                 error: function (xhr) {
-                    alert(xhr.responseJSON?.error || "Something went wrong.");
+                    alert(xhr.responseJSON?.error || "문제가 발생했습니다.");
                 }
             });
         }
@@ -400,7 +400,7 @@
     function populateOwnerDropdown(members) {
         const $select = $("#taskOwner");
         $select.empty();
-        $select.append('<option value="">Select a member</option>');
+        $select.append('<option value="" class="text-gray-400">인원을 선택해주세요</option>');
 
         members.forEach(function (member) {
             $select.append(`<option value="${member}">${member}</option>`);
