@@ -1,5 +1,6 @@
 import os
 import jwt
+import re
 from jwt import ExpiredSignatureError, InvalidTokenError, InvalidSignatureError
 from functools import wraps
 
@@ -22,6 +23,8 @@ from pymongo.errors import PyMongoError
 # TODO: 추후 db.py로 책임 분리
 client = MongoClient(os.getenv("MONGODB_URI"))
 users_db = client.get_database("mini_project").get_collection("users")
+users_db.create_index("ID", unique=True)
+users_db.create_index("email", unique=True)
 
 auth = Blueprint("auth", __name__)
 
@@ -63,7 +66,7 @@ def generate_token(user_id, expiration=30):
     }
     now = datetime.now(timezone.utc)
     payload = {
-        "sub": str(user_id),  # TODO: ID 대신 이메일 고려
+        "sub": str(user_id),
         "iat": now,
         "exp": now + timedelta(minutes=expiration),
     }
@@ -138,8 +141,8 @@ def post_login_form():
     if is_logged_in():
         return redirect("/index")
 
-    username = request.form.get("username").rstrip()
-    password = request.form.get("password").rstrip()
+    username = request.form.get("username", "").rstrip()
+    password = request.form.get("password", "")
 
     if len(username) > int(os.getenv("LOGIN_MAX_LENGTH")) or len(password) > int(
         os.getenv("LOGIN_MAX_LENGTH")
@@ -214,13 +217,33 @@ def post_signin_form():
         return redirect("/index")
 
     name = request.form.get("name", "").rstrip()
+    if not 1 <= len(name) <= 50:
+        return redirect("/signin")
+
     username = request.form.get("username", "").rstrip()
+    if not is_valid_username(username=username):
+        return redirect("/signin")
+
     email = request.form.get("email", "").rstrip()
-    password = request.form.get("password", "").rstrip()
-    jungle = int(request.form.get("jungle", 0))
-    classroom = int(request.form.get("classroom", 0))
+    if not is_valid_email(email=email):
+        return redirect("/signin")
+
+    password = request.form.get("password", "")
+    chk_password = request.form.get("chkpassword", "")
+    if not is_valid_password(password=password, chk_password=chk_password):
+        return redirect("/signin")
 
     # TODO: 백엔드 검증 루틴 추가
+    jungle = request.form.get("jungle", 0)
+    if jungle not in {"13"}:
+        return redirect("/signin")
+    classroom = request.form.get("classroom", 0)
+    if classroom not in {str(n) for n in range(301, 311)}:
+        return redirect("/signin")
+
+    jungle = int(jungle)
+    classroom = int(classroom)
+
     salt = os.urandom(16)
     hashed = encode_password(password=password, salt=salt)
 
@@ -243,6 +266,25 @@ def post_signin_form():
         return redirect("/signin")
 
 
+# 회원가입 백엔드 검증 함수들입니다.
+def is_valid_username(username):
+    if username and 8 <= len(username) <= 50:
+        pattern = re.compile(r"[a-zA-Z0-9_-]{8,50}")
+        return re.fullmatch(pattern=pattern, string=username) is not None
+    return False
+
+
+def is_valid_email(email):
+    if email and 0 < len(email) < 321:
+        pattern = re.compile(r"[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}")
+        return re.fullmatch(pattern=pattern, string=email) is not None
+    return False
+
+
+def is_valid_password(password, chk_password):
+    return 8 <= len(password) <= 50 and password == chk_password
+
+
 @auth.post("/signin/check/username")
 def check_username():
     """사용자 아이디가 DB에서 중복되는 지 검사합니다.
@@ -252,6 +294,8 @@ def check_username():
     3. 중복되어있지 않으면 True, 중복되어있으면 False를 반환합니다.
     """
     username = request.form.get("username", "").rstrip()
+    if not is_valid_username(username=username):
+        return jsonify(False)
     try:
         duplicated = users_db.find_one({"ID": username})
         return jsonify(duplicated is None)
@@ -268,6 +312,8 @@ def check_email():
     3. 중복되어있지 않으면 True, 중복되어있으면 False를 반환합니다.
     """
     email = request.form.get("email", "").rstrip()
+    if not is_valid_email(email=email):
+        return jsonify(False)
     try:
         duplicated = users_db.find_one({"email": email})
         return jsonify(duplicated is None)
