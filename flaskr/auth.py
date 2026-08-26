@@ -166,7 +166,9 @@ def post_login_form():
             samesite="Lax",
             httponly=True,
         )
-
+        response.set_cookie(
+            "name", user["name"],
+        )
         return response
     return redirect("/login")
 
