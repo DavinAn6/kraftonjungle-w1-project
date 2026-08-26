@@ -2,14 +2,26 @@
 <html lang="ko">
 
 <head>
+    <!-- Meta tags -->
     <meta charset="UTF-8">
-    <title>{% block title %}KraftonJungle Project{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Download Tailwind engine using CDN script -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
+<body class="bg-gray-100 p-8">
+
+    <!-- Two Jinja blocks allow other html file code to be inserted in between, eliminating need for repeated code -->
     {% block content %}{% endblock %}
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    {% block scripts %}{% endblock %}
+
+
 </body>
 
 </html>

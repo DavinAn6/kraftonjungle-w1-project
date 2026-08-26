@@ -4,6 +4,8 @@ from bson import ObjectId
 from datetime import datetime
 from db import get_db
 
+from auth import login_required
+
 task = Blueprint("task", __name__)
 # Connects to local MongoDB. Database: "w1_project", Collection: "tasks".
 
@@ -12,18 +14,21 @@ tasks_col = db["tasks"]
 
 
 @task.route("/dashboard")
+@login_required
 def dashboard():
     projects = list(db.project_info.find())
     return render_template("dashboard.html", projects=projects)
 
 
 @task.route("/api/tasks/<project_id>", methods=["GET"])
+@login_required
 def get_tasks(project_id):
     tasks = list(tasks_col.find({"project_id": ObjectId(project_id)}))
     return jsonify([serialize_task(t) for t in tasks])
 
 
 @task.route("/api/tasks", methods=["POST"])
+@login_required
 def add_task():
     data = request.get_json()
 
@@ -48,6 +53,7 @@ def serialize_task(task):
 
 
 @task.route("/api/tasks", methods=["DELETE"])
+@login_required
 def delete_tasks():
     data = request.get_json()
     ids = [ObjectId(i) for i in data["task_ids"]]
@@ -56,6 +62,7 @@ def delete_tasks():
 
 
 @task.route("/api/tasks/<task_id>", methods=["PATCH"])
+@login_required
 def update_task(task_id):
     data = request.get_json()
 
