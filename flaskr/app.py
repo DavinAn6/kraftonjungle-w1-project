@@ -1,6 +1,7 @@
 from flask import (
     Flask,
     render_template,
+    redirect,
 )
 from dotenv import load_dotenv, find_dotenv
 
@@ -19,12 +20,16 @@ app.register_blueprint(detail.detail)
 app.register_blueprint(task.task)
 
 
-@app.route("/")
-@app.route("/index")
+@app.route("/health")
 @login_required
 def health():
     """Flask Health Check"""
     return render_template("index.html", health="OK")
+
+
+@app.route("/")
+def go_to_dashboard():
+    return redirect("/dashboard")
 
 
 if __name__ == "__main__":
