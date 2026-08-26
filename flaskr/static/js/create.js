@@ -1,8 +1,7 @@
-let selectedMembers = []
+let selectedMembers = initialMembers
 let lastSearchedResults = []
 
 const addedMember = $("#added-member")
-
 const titleInput = $("#title");
 const startDateInput = $("#start_date")
 const endDateInput = $("#end_date")
@@ -13,9 +12,9 @@ const searchResult = $("#search-result")
 
 //필수 입력 필드 다 채워졌는지 확인하고 버튼 상태 결정 (필수 입력: 프로젝트 타이틀, 기간)
 function checkRequiredFields() {
-    const isTitleFilled = $("#title").val().trim() !== "";
-    const isStartDateFilled = $("#start_date").val().trim() !== "";
-    const isEndDateFilled = $("#end_date").val().trim() !== "";
+const isTitleFilled = $("#title").val().trim() !== "";
+const isStartDateFilled = $("#start_date").val().trim() !== "";
+const isEndDateFilled  = $("#end_date").val().trim() !== "";
 
     if (isTitleFilled && isStartDateFilled && isEndDateFilled) {
         submitBtn.prop("disabled", false)
@@ -25,16 +24,17 @@ function checkRequiredFields() {
     }
 }
 titleInput.on("input", checkRequiredFields)
-startDateInput.on("input", checkRequiredFields)
+startDateInput.on("input", checkRequiredFields) 
+startDateInput.on("input", function() {
+    endDateInput.attr("min", startDateInput.val())
+})
 endDateInput.on("input", checkRequiredFields)
 
 checkRequiredFields();
-
+renderSelectedMembers()
 //팀원 검색
 
-
 function searchMember() {
-    console.log("검색 버튼 눌림")
     const searchValue = searchbox.val()
     const url = `/api/users/search?search_member=${searchValue}`
     $.ajax({
@@ -79,14 +79,15 @@ function renderSelectedMembers() {
     selectedMembers.forEach(member => {
         addedMember.append(`<span>${member.name} <button type="button" onclick="removeMember('${member.email}')">x</button></span>`)
     })
+    $("#members").val(JSON.stringify(selectedMembers))
 }
+
 
 function removeMember(email) {
     selectedMembers = selectedMembers.filter(member => member.email !== email)
     renderSelectedMembers()
     renderSearchResults()
 }
-
 
 searchBTN.on("click", searchMember)
 searchbox.on("keydown", handleKeydown)
