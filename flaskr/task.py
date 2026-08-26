@@ -75,5 +75,19 @@ def update_task(task_id):
     return jsonify({"updated": True}), 200
 
 
+
+@task.route("/project/new")
+def new_project_form():
+    return render_template("project_details.html", project=None, tasks=[])
+
+@task.route("/project/<project_id>")
+def project_details(project_id):
+    project = db.project_info.find_one({"_id": ObjectId(project_id)})
+    tasks = list(tasks_col.find({"project_id": ObjectId(project_id)}))
+    return render_template("project_details.html", project=project, tasks=tasks)
+
+
+
+
 if __name__ == "__main__":
     task.run("0.0.0.0", port=5000, debug=True)
