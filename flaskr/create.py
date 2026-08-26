@@ -1,4 +1,5 @@
-from auth import login_required
+import json
+from bson.objectid import ObjectId
 from flask import Blueprint, render_template, request, jsonify
 from db import get_db
 db = get_db()
@@ -8,27 +9,29 @@ users = db["users"]
 create = Blueprint("create", __name__)
 
 @create.route("/create", methods=["GET", "POST"])
-@login_required
 def create_project():
     if request.method == "POST":
+        members_json = request.form.get("members")
+        members = json.loads(members_json) if members_json else []
+
         new_project = {
             "title": request.form.get("title"),
             "team": request.form.get("team"),
             "description": request.form.get("description"),
             "start_date": request.form.get("start_date"),
             "end_date": request.form.get("end_date"),
+            "members": members,
         }
-        projects.insert_one(new_project)
-        return """
+        result = projects.insert_one(new_project)
+        return f"""
         <script>
             alert("프로젝트 생성 성공!");
-            window.location.href = "/";
+            window.location.href = "/projects/{result.inserted_id}";
         </script>
         """
     return render_template("create.html")
 
 @create.route("/api/users/search")
-@login_required
 def search_member():
     search_member = request.args.get("search_member")
     results = users.find(
@@ -42,6 +45,3 @@ def search_member():
     user_list = []
     for user in results: user_list.append({"name" : user.get("name"), "email" : user.get("email")})
     return jsonify(user_list)
-
-
-

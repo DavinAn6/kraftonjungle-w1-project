@@ -6,11 +6,12 @@ from flask import (
 from dotenv import load_dotenv, find_dotenv
 import auth
 import create
+import detail
 
 app = Flask(__name__)
 app.register_blueprint(auth.auth)
 app.register_blueprint(create.create)
-
+app.register_blueprint(detail.detail)
 load_dotenv(find_dotenv())
 
 

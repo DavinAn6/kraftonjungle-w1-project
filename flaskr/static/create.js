@@ -1,4 +1,4 @@
-let selectedMembers = []
+let selectedMembers = initialMembers
 let lastSearchedResults = []
 
 const addedMember = $("#added-member")
@@ -11,7 +11,8 @@ const searchbox = $("#search-box")
 const searchResult = $("#search-result")
 
 //필수 입력 필드 다 채워졌는지 확인하고 버튼 상태 결정 (필수 입력: 프로젝트 타이틀, 기간)
-function checkRequiredFields() {
+function checkRequiredFields() 
+{
 const isTitleFilled = $("#title").val().trim() !== "";
 const isStartDateFilled = $("#start_date").val().trim() !== "";
 const isEndDateFilled  = $("#end_date").val().trim() !== "";
@@ -31,7 +32,7 @@ startDateInput.on("input", function() {
 endDateInput.on("input", checkRequiredFields)
 
 checkRequiredFields();
-
+renderSelectedMembers()
 //팀원 검색
 
 function searchMember() {
@@ -79,7 +80,9 @@ function renderSelectedMembers() {
     selectedMembers.forEach(member => {
         addedMember.append(`<span>${member.name} <button type="button" onclick="removeMember('${member.email}')">x</button></span>`)
     })
+    $("#members").val(JSON.stringify(selectedMembers))
 }
+
 
 function removeMember(email) {
     selectedMembers = selectedMembers.filter(member => member.email !== email)

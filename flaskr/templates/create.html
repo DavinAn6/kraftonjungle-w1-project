@@ -2,24 +2,24 @@
 {% block content %}
 <h1>프로젝트 생성</h1>
 
-
-<form method="post" action="/create">
+<form method="post" action="{{ form_action or '/create' }}">
 
 <label for="title">프로젝트 타이틀</label>
-<input type="text" id="title" name="title">
+<input type="text" id="title" name="title" value="{{ project.title if project else ''}}">
+
 
 <label for="team">팀명</label>
-<input type="text" id="team" name="team">
+<input type="text" id="team" name="team" value="{{project.team if project else ''}}">
 
 <label for="description">프로젝트 정보</label>
-<textarea id="description" name="description"></textarea>
+<textarea id="description" name="description">{{ project.description if project else '' }}</textarea>
 
 <fieldset>
     <legend>프로젝트 기간</legend>
     <label for="start_date">시작일</label>
-    <input type="date" id="start_date" name="start_date">
+    <input type="date" id="start_date" name="start_date" value="{{ project.start_date if project else '' }}">
     <label for="end_date">종료일</label> 
-    <input type="date" id="end_date" name="end_date">
+    <input type="date" id="end_date" name="end_date" value="{{ project.end_date if project else ''}}">
 </fieldset>
 
 <fieldset>  
@@ -28,8 +28,11 @@
     <button type="button" id="search-member">팀원 검색</button>  
     <div id="search-result"></div> <div id="added-member"></div>
 </fieldset>
-<button type="submit" id="submit-btn">프로젝트 생성</button>
+<button type="submit" id="submit-btn">{{'저장' if project else '프로젝트 생성'}}</button>
+<input type="hidden" id="members" name="members">
 </form>
+<script>const initialMembers = {{ project.members | tojson if project else '[]' }};
+</script>
 <script src="{{url_for('static', filename='create.js')}}"></script>
 
 {% endblock %}
