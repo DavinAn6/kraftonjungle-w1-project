@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, make_response
 from bson import ObjectId
 
 from datetime import datetime
@@ -17,7 +17,10 @@ tasks_col = db["tasks"]
 @login_required
 def dashboard():
     projects = list(db.project_info.find())
-    return render_template("dashboard.html", projects=projects)
+
+    name = request.cookies.get("name")
+    return make_response(render_template("dashboard.html", projects=projects, name=name))
+
 
 
 @task.route("/api/tasks/<project_id>", methods=["GET"])
@@ -74,6 +77,3 @@ def update_task(task_id):
 
     return jsonify({"updated": True}), 200
 
-
-if __name__ == "__main__":
-    task.run("0.0.0.0", port=5000, debug=True)
