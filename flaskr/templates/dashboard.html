@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="max-w-6xl mx-auto space-y-6">
+    <img src="{{ url_for('static', filename='JungleTrek Logo.png')}}" class="w-full rounded-x1 mb-6"
+        alt="JungleTrek Banner">
+    <div class="bg-white rounded-xl border p-6 space-y-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-[30px] text-gray-500">안녕하세요, {{ name }}님!</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <form action="{{ url_for('auth.logout') }}" method="post">
+                    <button type="submit"
+                        class="rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-black hover:bg-gray-400">
+                        Logout
+                    </button>
+                </form>
+                <a id="newProjectBtn" href="/create"
+                    class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+                    <span>+</span> New Project
+                </a>
+            </div>
+        </div>
+
+        <div class="flex gap-6 border-b">
+            <button class="pb-2 border-b-2 border-emerald-600 text-emerald-600 font-medium">Ongoing</button>
+            <button class="pb-2 text-gray-400">Completed</button>
+        </div>
+
+
+        <div class="grid grid-cols-3 gap-4">
+            {% for p in projects %}
+            <div class="project-card border rounded-xl p-4 space-y-3 cursor-pointer {% if loop.first %}border-2 bg-emerald-50{% else %}border{% endif %}"
+                data-project="{{ p._id }}">
+                <div class="flex items-center justify-between">
+                    <span class="font-medium">{{ p.title }}</span>
+                    <a href="/projects/{{ p._id }}" class="text-gray-400 hover:text-emerald-600 text-sm"
+                        onclick="event.stopPropagation();">
+                        ➡
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+
+        <!-- 대시보드 ██████████████████████████████████████████████████████████████████ -->
+
+        <div class="space-y-4">
+
+            <div class="flex items-center justify-between">
+                <span class="font-medium text-lg">Task Dashboard</span>
+
+                <div class="flex items-center gap-2">
+                    <button id="deleteTasksBtn"
+                        class="hidden items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+                        <span>🗑</span> Delete
+                    </button>
+                    <button id="newTaskBtn"
+                        class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+                        <span>+</span> New Task
+                    </button>
+                </div>
+            </div>
+
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left text-gray-400 border-b">
+                        <th class="py-2 w-10"></th>
+                        <th class="py-2 w-10">No.</th>
+                        <th class="py-2">Agenda</th>
+                        <th class="py-2">Due Date</th>
+                        <th class="py-2">Owner</th>
+                        <th class="py-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- TASK MODAL ██████████████████████████████████████████████████████████████████ -->
+
+        <div id="taskModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center">
+            <div class="bg-white rounded-xl p-6 w-96 space-y-4">
+
+                <div class="flex justify-between items-center">
+                    <span class="font-medium text-lg">New Task</span>
+                    <button id="closeModalBtn" class="text-gray-400">✕</button>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Agenda</label>
+                    <input id="taskAgenda" placeholder="e.g. Write deploy script" class="border w-full p-2 rounded">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Due Date</label>
+                    <input id="taskDueDate" type="date" class="border w-full p-2 rounded">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Owner</label>
+                    <select id="taskOwner" class="border w-full p-2 rounded">
+                        <option value="">Select a member</option>
+                    </select>
+                </div>
+
+                <button id="submitTask" class="bg-emerald-500 text-white px-4 py-2 rounded-lg w-full">Add</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/tasks.js') }}"></script>
+{% endblock %}
