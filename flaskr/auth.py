@@ -19,10 +19,10 @@ from hmac import compare_digest
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
+from db import get_db
 
-# TODO: 추후 db.py로 책임 분리
-client = MongoClient(os.getenv("MONGODB_URI"))
-users_db = client.get_database("mini_project").get_collection("users")
+db = get_db()
+users_db = db.get_collection("users")
 users_db.create_index("ID", unique=True)
 users_db.create_index("email", unique=True)
 
@@ -159,9 +159,7 @@ def post_login_form():
     if verify_password(user=user, password=password):
         access_token = generate_token(user_id=user["_id"], expiration=30)
 
-        response = make_response(
-            render_template("auth/login_success.html", username=username)
-        )
+        response = make_response(redirect("/index"))
         response.set_cookie(
             "access_token",
             access_token,
