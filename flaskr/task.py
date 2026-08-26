@@ -135,7 +135,3 @@ def update_task(task_id):
     tasks_col.update_one({"_id": ObjectId(task_id)}, {"$set": updates})
 
     return jsonify({"updated": True}), 200
-
-
-if __name__ == "__main__":
-    task.run("0.0.0.0", port=5000, debug=True)
