@@ -1,4 +1,3 @@
-import os
 from flask import (
     Flask,
     render_template,
@@ -9,7 +8,6 @@ load_dotenv(find_dotenv())
 
 import auth
 from auth import login_required
-
 import create
 
 app = Flask(__name__)
