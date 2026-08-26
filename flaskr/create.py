@@ -20,6 +20,7 @@ def create_project():
             "start_date": request.form.get("start_date"),
             "end_date": request.form.get("end_date"),
         }
+        # TODO: try ~ catch 문으로 DB 에러 분기 처리
         projects.insert_one(new_project)
         return """
         <script>

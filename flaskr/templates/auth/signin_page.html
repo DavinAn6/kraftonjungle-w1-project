@@ -1,47 +1,99 @@
 {% extends "base.html" %}
 
+{% block title %}회원가입 | Jungle Tracker{% endblock %}
+
 {% block content %}
+<main class="flex min-h-[calc(100vh-4rem)] items-center justify-center py-8">
+    <form id="signin_form" action="/signin" method="post" autocomplete="on"
+        class="w-full max-w-lg space-y-5 rounded-xl border border-gray-200 bg-white p-8 text-sm text-gray-600 shadow-xl">
+        <header class="text-center">
+            <p class="text-sm font-medium text-indigo-500">Jungle Tracker</p>
+            <h1 class="mt-1 text-2xl font-bold text-gray-900">회원가입</h1>
+        </header>
 
-<div class="signin-wrapper">
-    <h2>Login</h2>
-    <form id="signin_form" action="/signin" method="post">
-        이름: <input type="text" id="name" name="name" placeholder="이름" maxlength="50" required /><br>
-        이메일: <input type="email" id="email" name="email" placeholder="이메일" maxlength="320" required />
-        <button type="button" onclick="chkEmail()">이메일 중복 확인</button><br>
-        <pre id="useEmail"></pre>
-        기수:
-        <select id="jungle" name="jungle">
-            <option value="13">13</option>
-        </select><br>
-        강의장:
-        <select id="classroom" name="classroom">
-            <option value="301">301</option>
-            <option value="302">302</option>
-            <option value="303">303</option>
-            <option value="304">304</option>
-            <option value="305">305</option>
-            <option value="306">306</option>
-            <option value="307">307</option>
-            <option value="308">308</option>
-            <option value="309">309</option>
-            <option value="310">310</option>
-        </select><br>
-        ID: <input type="text" id="username" name="username" placeholder="아이디" maxlength="50" required />
-        <button type="button" onclick="chkID()">아이디 중복 확인</button><br>
-        <pre id="useUsername"></pre>
-        <br>
-        비밀번호: <input type="password" id="password" name="password" placeholder="비밀번호" minlength="8" maxlength="50"
-            required /><br>
-        비밀번호 확인: <input type="password" id="chkpassword" name="chkpassword" placeholder="비밀번호 확인" minlength="8"
-            maxlength="50" onkeyup="chkPassword()" required /><br>
-        <pre id="usePasswd"></pre>
+        <div>
+            <label for="name" class="block font-medium text-gray-700">이름</label>
+            <input type="text" id="name" name="name" maxlength="50" required autocomplete="name"
+                placeholder="이름을 입력하세요"
+                class="mt-1 w-full rounded-md border border-gray-300 p-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+        </div>
 
-        <br><br>
-        <button type="submit">이 정보로 가입</button>
+        <div>
+            <label for="email" class="block font-medium text-gray-700">이메일</label>
+            <div class="mt-1 flex gap-2">
+                <input type="email" id="email" name="email" maxlength="320" required autocomplete="email"
+                    placeholder="example@email.com"
+                    class="min-w-0 flex-1 rounded-md border border-gray-300 p-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+                <button type="button" id="checkEmailBtn"
+                    class="shrink-0 rounded-md border border-indigo-500 px-3 font-medium text-indigo-500 hover:bg-indigo-50">
+                    중복 확인
+                </button>
+            </div>
+            <p id="useEmail" role="status" aria-live="polite" class="mt-1 min-h-5 text-xs"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label for="jungle" class="block font-medium text-gray-700">기수</label>
+                <select id="jungle" name="jungle"
+                    class="mt-1 w-full rounded-md border border-gray-300 bg-white p-2.5 outline-none focus:border-indigo-500">
+                    <option value="13">13기</option>
+                </select>
+            </div>
+            <div>
+                <label for="classroom" class="block font-medium text-gray-700">강의장</label>
+                <select id="classroom" name="classroom"
+                    class="mt-1 w-full rounded-md border border-gray-300 bg-white p-2.5 outline-none focus:border-indigo-500">
+                    {% for room in range(301, 311) %}
+                    <option value="{{ room }}">{{ room }}호</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label for="username" class="block font-medium text-gray-700">아이디</label>
+            <div class="mt-1 flex gap-2">
+                <input type="text" id="username" name="username" minlength="8" maxlength="50" required
+                    autocomplete="username" placeholder="8자 이상 입력하세요"
+                    class="min-w-0 flex-1 rounded-md border border-gray-300 p-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+                <button type="button" id="checkUsernameBtn"
+                    class="shrink-0 rounded-md border border-indigo-500 px-3 font-medium text-indigo-500 hover:bg-indigo-50">
+                    중복 확인
+                </button>
+            </div>
+            <p id="useUsername" role="status" aria-live="polite" class="mt-1 min-h-5 text-xs"></p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+                <label for="password" class="block font-medium text-gray-700">비밀번호</label>
+                <input type="password" id="password" name="password" minlength="8" maxlength="50" required
+                    autocomplete="new-password" placeholder="8자 이상"
+                    class="mt-1 w-full rounded-md border border-gray-300 p-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+            </div>
+            <div>
+                <label for="chkpassword" class="block font-medium text-gray-700">비밀번호 확인</label>
+                <input type="password" id="chkpassword" name="chkpassword" minlength="8" maxlength="50" required
+                    autocomplete="new-password" placeholder="한 번 더 입력하세요"
+                    class="mt-1 w-full rounded-md border border-gray-300 p-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+            </div>
+        </div>
+        <p id="usePasswd" role="status" aria-live="polite" class="-mt-4 min-h-5 text-xs"></p>
+
+        <button type="submit"
+            class="w-full rounded-md bg-indigo-500 py-2.5 font-semibold text-white transition hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+            가입하기
+        </button>
+
+        <p class="text-center text-gray-500">
+            이미 계정이 있나요?
+            <a href="/login" class="font-medium text-indigo-500 hover:text-indigo-600">로그인</a>
+        </p>
     </form>
-</div>
+</main>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{url_for('static', filename='signin.js')}}"></script>
-{ % endblock % }
+<script src="{{ url_for('static', filename='js/signin.js') }}"></script>
+{% endblock %}

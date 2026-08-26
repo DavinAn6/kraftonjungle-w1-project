@@ -1,85 +1,95 @@
-var isEmail = "";
-var isUsername = "";
-var isPassword = "";
-/** TODO: ajax로 사용가능한 이메일인지 검증**/
+let verifiedEmail = "";
+let verifiedUsername = "";
+
+const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+const usernamePattern = /^[a-zA-Z0-9_-]{8,50}$/;
+
 function chkEmail() {
-    var email = $("#email").val();
-    var regexp = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-    if (!regexp.test(email)) {
-        $("#useEmail").text("❌올바른 이메일 주소가 아닙니다.");
-        $("#email").focus();
-        isEmail = "";
+    const $email = $("#email");
+    const email = $email.val().trim();
+
+    if (!emailPattern.test(email)) {
+        $("#useEmail").text("❌ 올바른 이메일 주소가 아닙니다.");
+        $email.focus();
         return;
     }
 
-    $.ajax({
-        url: "/signin/check/email",
-        type: "post",
-        data: { "email": email },
-        success: function (data, status, xhr) {
-            if (data) {
-                $("#useEmail").text("✅사용가능한 이메일 입니다.");
-                isEmail = email;
+    $.post("/signin/check/email", { email })
+        .done(function (available) {
+            if (available) {
+                $email.val(email);
+                verifiedEmail = email;
+                $("#useEmail").text("✅ 사용할 수 있는 이메일입니다.");
+                return;
             }
-            else {
-                $("#useEmail").text("❌중복된 이메일 입니다.");
-                isEmail = "";
-            }
-        }
-    })
-    return;
+            $("#useEmail").text("❌ 이미 사용 중인 이메일입니다.");
+        })
+        .fail(function () {
+            $("#useEmail").text("❌ 중복 확인에 실패했습니다.");
+        });
 }
-/** TODO: ajax로 사용가능한 ID인지 검증**/
+
 function chkID() {
-    var username = $("#username").val();
-    var regexp = /^[a-zA-Z0-9_-]{8,50}$/
-    if (!regexp.test(username)) {
-        $("#useUsername").text("❌아이디는 8자 이상 알파벳 소문자, 대문자, 숫자, 하이픈을 사용해주세요.");
-        $("#username").focus();
-        isUsername = "";
+    const $username = $("#username");
+    const username = $username.val().trim();
+
+    if (!usernamePattern.test(username)) {
+        $("#useUsername").text("❌ 영문, 숫자, 밑줄, 하이픈을 사용해 8자 이상 입력하세요.");
+        $username.focus();
         return;
     }
 
-    $.ajax({
-        url: "/signin/check/username",
-        type: "post",
-        data: { "username": username },
-        success: function (data, status, xhr) {
-            if (data) {
-                $("#useUsername").text("✅사용가능한 아이디입니다.");
-                isUsername = username;
+    $.post("/signin/check/username", { username })
+        .done(function (available) {
+            if (available) {
+                $username.val(username);
+                verifiedUsername = username;
+                $("#useUsername").text("✅ 사용할 수 있는 아이디입니다.");
+                return;
             }
-            else {
-                $("#useUsername").text("❌중복된 아이디입니다.");
-                isUsername = "";
-            }
-        }
-    })
-    return;
+            $("#useUsername").text("❌ 이미 사용 중인 아이디입니다.");
+        })
+        .fail(function () {
+            $("#useUsername").text("❌ 중복 확인에 실패했습니다.");
+        });
 }
 
 function chkPassword() {
-    var ori_password = $("#password").val();
-    var rep_password = $("#chkpassword").val();
+    const password = $("#password").val();
+    const confirmation = $("#chkpassword").val();
 
-    if (ori_password !== rep_password) {
-        $("#usePasswd").text("❌비밀번호가 다릅니다.");
-        isPassword = "";
-        return
+    if (!confirmation) {
+        $("#usePasswd").text("");
+        return false;
     }
-    $("#usePasswd").text("✅");
-    isPassword = ori_password;
-    return;
+    if (password.length < 8 || password !== confirmation) {
+        $("#usePasswd").text("❌ 비밀번호가 일치하지 않습니다.");
+        return false;
+    }
+    $("#usePasswd").text("✅ 비밀번호가 일치합니다.");
+    return true;
 }
 
-$("#signin_form").on("submit", function (event) {
-    var isValidEmail = isEmail === $("#email").val();
-    var isValidUsername = isUsername === $("#username").val();
-    var isValidPassword = isPassword === $("#password").val();
+$("#checkEmailBtn").on("click", chkEmail);
+$("#checkUsernameBtn").on("click", chkID);
+$("#password, #chkpassword").on("input", chkPassword);
 
-    if (!(isValidEmail && isValidUsername && isValidPassword)) {
+$("#email").on("input", function () {
+    verifiedEmail = "";
+    $("#useEmail").text("");
+});
+
+$("#username").on("input", function () {
+    verifiedUsername = "";
+    $("#useUsername").text("");
+});
+
+$("#signin_form").on("submit", function (event) {
+    const emailIsVerified = verifiedEmail === $("#email").val().trim();
+    const usernameIsVerified = verifiedUsername === $("#username").val().trim();
+
+    if (!emailIsVerified || !usernameIsVerified || !chkPassword()) {
         event.preventDefault();
-        alert("항목을 다시 점검해 주세요");
-        return;
+        alert("입력 항목과 중복 확인 결과를 다시 확인해주세요.");
     }
-})
+});

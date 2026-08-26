@@ -16,7 +16,6 @@ from flask import (
 from datetime import datetime, timezone, timedelta
 import hashlib
 from hmac import compare_digest
-from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
 from db import get_db
@@ -200,7 +199,7 @@ def get_signin_form():
     """회원가입 페이지를 반환합니다.
 
     1. 현재 로그인 되어있을 시 /dashboard 페이지로 리디렉션 됩니다.
-    2. 로그인 되어있지 않으면 회원가입페이지를 반환합니다.
+    2. 로그인 되어있지 않으면 회원가입 페이지를 반환합니다.
     """
     if is_logged_in():
         return redirect("/dashboard")

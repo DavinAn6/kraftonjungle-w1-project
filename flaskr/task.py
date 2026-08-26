@@ -19,8 +19,13 @@ def dashboard():
     projects = list(db.project_info.find())
 
     name = request.cookies.get("name")
-    return make_response(render_template("dashboard.html", projects=projects, name=name))
-
+    return make_response(
+        render_template(
+            "dashboard.html",
+            projects=projects,
+            name=name,
+        )
+    )
 
 
 @task.route("/api/tasks/<project_id>", methods=["GET"])
@@ -76,4 +81,3 @@ def update_task(task_id):
     tasks_col.update_one({"_id": ObjectId(task_id)}, {"$set": updates})
 
     return jsonify({"updated": True}), 200
-
