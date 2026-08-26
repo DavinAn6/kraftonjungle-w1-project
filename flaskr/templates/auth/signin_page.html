@@ -11,15 +11,11 @@
 <body>
     <div class="signin-wrapper">
         <h2>Login</h2>
-        <form action="/signin" method="post" id="signin_form">
-            이름: <input type="text" id="name" name="name" placeholder="이름" maxlength="50" required />
-
-
-
-            <br>
-            이메일: <input type="email" id="email" name="email" placeholder="이메일" maxlength="320" required /><br>
-            비밀번호: <input type="password" id="password" name="password" placeholder="Password" maxlength="50"
-                required /><br>
+        <form id="signin_form" action="/signin" method="post">
+            이름: <input type="text" id="name" name="name" placeholder="이름" maxlength="50" required /><br>
+            이메일: <input type="email" id="email" name="email" placeholder="이메일" maxlength="320" required />
+            <button type="button" onclick="chkEmail()">이메일 중복 확인</button><br>
+            <pre id="useEmail"></pre>
             기수:
             <select id="jungle" name="jungle">
                 <option value="13">13</option>
@@ -36,17 +32,105 @@
                 <option value="308">308</option>
                 <option value="309">309</option>
                 <option value="310">310</option>
-            </select>
+            </select><br>
+            ID: <input type="text" id="username" name="username" placeholder="아이디" maxlength="50" required />
+            <button type="button" onclick="chkID()">아이디 중복 확인</button><br>
+            <pre id="useUsername"></pre>
+            <br>
+            비밀번호: <input type="password" id="password" name="password" placeholder="비밀번호" minlength="8" maxlength="50"
+                required /><br>
+            비밀번호 확인: <input type="password" id="chkpassword" name="chkpassword" placeholder="비밀번호 확인" minlength="8"
+                maxlength="50" onkeyup="chkPassword()" required /><br>
+            <pre id="usePasswd"></pre>
 
             <br><br>
-            <button>이 정보로 가입</button>
+            <button type="submit">이 정보로 가입</button>
         </form>
     </div>
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
     <script>
+        var isEmail = false;
+        var isUsername = false;
+        var isPassword = false;
+        /** TODO: ajax로 사용가능한 이메일인지 검증**/
+        function chkEmail() {
+            var email = $("#email").val();
+            var regexp = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+            if (!regexp.test(email)) {
+                $("#useEmail").text("❌올바른 이메일 주소가 아닙니다.");
+                $("#email").focus();
+                isEmail = false;
+                return;
+            }
 
+            $.ajax({
+                url: "/signin/check/email",
+                type: "post",
+                data: { "email": email },
+                success: function (data, status, xhr) {
+                    if (data) {
+                        $("#useEmail").text("✅사용가능한 이메일 입니다.");
+                        isEmail = true;
+                    }
+                    else {
+                        $("#useEmail").text("❌중복된 이메일 입니다.");
+                        isEmail = false;
+                    }
+                }
+            })
+            return;
+        }
+        /** TODO: ajax로 사용가능한 ID인지 검증**/
+        function chkID() {
+            var username = $("#username").val();
+            var regexp = /^[a-zA-Z0-9_-]{8,50}$/
+            if (!regexp.test(username)) {
+                $("#useUsername").text("❌아이디는 8자 이상 알파벳 소문자, 대문자, 숫자, 하이픈을 사용해주세요.");
+                $("#username").focus();
+                isUsername = false;
+                return;
+            }
+
+            $.ajax({
+                url: "/signin/check/username",
+                type: "post",
+                data: { "username": username },
+                success: function (data, status, xhr) {
+                    if (data) {
+                        $("#useUsername").text("✅사용가능한 아이디입니다.");
+                        isUsername = true;
+                    }
+                    else {
+                        $("#useUsername").text("❌중복된 아이디입니다.");
+                        isUsername = false;
+                    }
+                }
+            })
+            return;
+        }
+
+        function chkPassword() {
+            var ori_password = $("#password").val();
+            var rep_password = $("#chkpassword").val();
+
+            if (ori_password !== rep_password) {
+                $("#usePasswd").text("❌비밀번호가 다릅니다.");
+                isPassword = false;
+                return
+            }
+            $("#usePasswd").text("✅");
+            isPassword = true;
+            return;
+        }
+
+        $("#signin_form").on("submit", function (event) {
+            if (!(isEmail && isUsername && isPassword)) {
+                event.preventDefault();
+                alert("항목을 다시 점검해 주세요");
+                return;
+            }
+        })
     </script>
-    <script src="https://jquery.com"></script>
 </body>
-
 
 </html>

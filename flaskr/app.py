@@ -4,16 +4,20 @@ from flask import (
     render_template,
 )
 from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
+
 import auth
+from auth import login_required
+
 
 app = Flask(__name__)
 app.register_blueprint(auth.auth)
 
-load_dotenv(find_dotenv())
-
 
 @app.route("/")
 @app.route("/index")
+@login_required
 def health():
     """Flask Health Check"""
     return render_template("index.html", health="OK")

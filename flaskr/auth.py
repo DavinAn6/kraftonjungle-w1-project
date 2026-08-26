@@ -9,15 +9,18 @@ from flask import (
     redirect,
     make_response,
     Blueprint,
+    jsonify,
 )
 
 from datetime import datetime, timezone, timedelta
 import hashlib
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 
-# TODO: in-memory. Production or DB 연동 시 제거
-users = {
-    "admin": "admin",
-}
+
+# TODO: 추후 db.py로 책임 분리
+client = MongoClient(os.getenv("MONGODB_URI"))
+users_db = client.get_database("mini_project").get_collection("users")
 
 auth = Blueprint("auth", __name__)
 
@@ -59,7 +62,7 @@ def generate_token(username, expiration=30):
     }
     payload = {
         "user_id": 1,  # TODO: 추후 DB 연동 시, mongoDB의 _id 또는 user_id 항목으로 교체
-        "sub": username,
+        "sub": username,  # TODO: ID 대신 이메일 고려
         "exp": datetime.now(timezone.utc) + timedelta(minutes=expiration),
     }
     secret_key = os.getenv("JWT_SECRET_KEY")
@@ -96,6 +99,11 @@ def login_required(func):
     return validation
 
 
+def is_logged_in():
+    access_token = request.cookies.get("access_token")
+    return verify_access_token(token=access_token) is not None
+
+
 @auth.route("/login", methods=["GET", "POST"])
 def login():
     """로그인에 대한 GET, POST 요청을 분리합니다."""
@@ -113,13 +121,8 @@ def get_login_form():
     3. 토큰이 유효하고, username이 DB에 존재하면 /index 페이지로 리디렉션 됩니다.
     4. 토큰 검증 실패 시 로그인 페이지를 반환합니다.
     """
-
-    access_token = request.cookies.get("access_token")
-    payload = verify_access_token(token=access_token)
-    if payload:
-        username = payload["sub"]
-        if username in users:
-            return redirect("/index")
+    if is_logged_in():
+        return redirect("/index")
     return render_template("auth/login_page.html")
 
 
@@ -131,12 +134,8 @@ def post_login_form():
     3. 아이디와 패스워드 길이를 검사합니다. 최대 길이는 50입니다.
     4. 아이디와 패스워드가 DB에 존재할 경우, JWT 토큰을 새로 발급합니다. 만료 시간은 30분 입니다.
     """
-    access_token = request.cookies.get("access_token")
-    payload = verify_access_token(token=access_token)
-    if payload:
-        username = payload["sub"]
-        if username in users:
-            return redirect("/index")
+    if is_logged_in():
+        return redirect("/index")
 
     username = request.form.get("username").rstrip()
     password = request.form.get("password").rstrip()
@@ -145,10 +144,14 @@ def post_login_form():
         os.getenv("LOGIN_MAX_LENGTH")
     ):
         return redirect("/login")
+    try:
+        user = users_db.find_one({"ID": username})
+        if not user:
+            return redirect("/login")
+    except PyMongoError:
+        return redirect("/login")
 
-    if (
-        username in users and users[username] == password
-    ):  # TODO: 추후 DB 쿼리로 교체. 해시
+    if verify_password(user=user, password=password):
         access_token = generate_token(username=username, expiration=30)
 
         response = make_response(
@@ -158,22 +161,18 @@ def post_login_form():
         response.set_cookie("username", username)
 
         return response
-    else:
-        return redirect("/login")
+    return redirect("/login")
 
 
 @auth.post("/logout")
 def logout():
     """사이트로부터 로그아웃을 시도합니다.
 
-    1. 쿠키에 JWT 토큰이 존재하는지 검사합니다.
-    2. JWT 토큰이 존재하지 않는다면, /index 페이지로 리다이렉트됩니다.
-    3. JWT 토큰이 존재한다면, 쿠키에서 값을 삭제합니다.
-    4. login 페이지로 리다이렉트 됩니다.
+    1. access_token을 삭제합니다.
+    2. 로그인 페이지로 리디렉션 됩니다.
     """
     response = make_response(redirect("/login"))
     response.delete_cookie("access_token")
-    response.delete_cookie("username")
 
     return response
 
@@ -184,7 +183,7 @@ def signin():
     if request.method == "GET":
         return get_signin_form()
     else:
-        return
+        return post_signin_form()
 
 
 def get_signin_form():
@@ -193,12 +192,8 @@ def get_signin_form():
     1. 현재 로그인 되어있을 시 /index 페이지로 리디렉션 됩니다.
     2. 로그인 되어있지 않으면 회원가입페이지를 반환합니다.
     """
-    access_token = request.cookies.get("access_token")
-    payload = verify_access_token(token=access_token)
-    if payload:
-        username = payload["sub"]
-        if username in users:
-            return redirect("/index")
+    if is_logged_in():
+        return redirect("/index")
     return render_template("auth/signin_page.html")
 
 
@@ -207,24 +202,71 @@ def post_signin_form():
 
     1. JWT 토큰을 검증하고, 유효할 시 /index로 리디렉션 됩니다.
     2. JWT 토큰이 유효하지 않을 시 회원가입 합니다.
-    3. 공백 제거와 아이디와 패스워드 길이를 검사하고 유효한지 확인합니다.
+    3. 각 항목이 DB에 들어가도 문제없을지 검증합니다.
     """
-    access_token = request.cookies.get("access_token")
-    payload = verify_access_token(token=access_token)
-    if payload:
-        username = payload["sub"]
-        if username in users:
-            return redirect("/index")
+    if is_logged_in():
+        return redirect("/index")
 
-    name = request.form.get("name").rstrip()
-    email = request.form.get("email").rstrip()
+    name = request.form.get("name", "").rstrip()
+    username = request.form.get("username", "").rstrip()
+    email = request.form.get("email", "").rstrip()
+    password = request.form.get("password", "").rstrip()
+    jungle = int(request.form.get("jungle", 0))
+    classroom = int(request.form.get("classroom", 0))
 
-    password = request.form.get("password").rstrip()
+    # TODO: 백엔드 검증 루틴 추가
     salt = os.urandom(16)
-    password = encode_password(password=password, salt=salt)
+    hashed = encode_password(password=password, salt=salt)
 
-    jungle = int(request.form.get("jungle"))
-    classroom = int(request.form.get("classroom"))
+    data = {
+        "name": name,
+        "ID": username,
+        "email": email,
+        "password": {
+            "salt": salt,
+            "hashed": hashed,
+        },
+        "jungle": jungle,
+        "classroom": classroom,
+    }
+
+    try:
+        users_db.insert_one(data)
+        return redirect("/login")
+    except PyMongoError:
+        return render_template("/signin_failed.html")
+
+
+@auth.post("/signin/check/username")
+def check_username():
+    """사용자 아이디가 DB에서 중복되는 지 검사합니다.
+
+    1. 프론트엔드에서 아이디 중복 확인을 누르면
+    2. 이 API에서 DB에 접근하여 중복된 아이디인지 검사합니다.
+    3. 중복되어있지 않으면 True, 중복되어있으면 False를 반환합니다.
+    """
+    username = request.form.get("username", "").rstrip()
+    try:
+        duplicated = users_db.find_one({"ID": username})
+        return jsonify(duplicated is None)
+    except PyMongoError:
+        return jsonify(False)
+
+
+@auth.post("/signin/check/email")
+def check_email():
+    """사용자 이메일이 DB에서 중복되는 지 검사합니다.
+
+    1. 프론트엔드에서 이메일 중복 확인을 누르면
+    2. 이 API에서 DB에 접근하여 중복된 이메일인지 검사합니다.
+    3. 중복되어있지 않으면 True, 중복되어있으면 False를 반환합니다.
+    """
+    email = request.form.get("email", "").rstrip()
+    try:
+        duplicated = users_db.find_one({"email": email})
+        return jsonify(duplicated is None)
+    except PyMongoError:
+        return jsonify(False)
 
 
 def encode_password(password, salt):
@@ -250,22 +292,15 @@ def encode_password(password, salt):
     return hashed_password
 
 
-def decode_password(username, password, salt):
+def verify_password(user, password):
     """비밀번호 검증 함수입니다.
 
     비밀번호를 생성할 때 같이 저장했던 솔트값을 이용하여 비교합니다.
     DB에 저장되어있는 해시값과, 현재 받은 비밀번호를 다시 해시한 값을 비교하여
     동일한지 검증합니다.
     """
+    db_salt = user["password"]["salt"]
+    db_password = user["password"]["hashed"]
 
-    password = password.encode("utf-8")
-
-    hashed_password = hashlib.pbkdf2_hmac(
-        hash_name="sha256",
-        password=password,
-        salt=salt,
-        iterations=100000,
-    ).hex()
-
-    # TODO: DB 연동하기.
-    return hashed_password == users[username]
+    hashed_password = encode_password(password=password, salt=db_salt)
+    return hashed_password == db_password
