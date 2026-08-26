@@ -3,11 +3,11 @@
 
 {% block content %}
 
+
 <!-- Outer wrapper
  max-w-6xl caps the width so it doesn't stretch edge-to-edge on a wide screen
 -->
 <div class="max-w-6xl mx-auto space-y-6">
-
     <!-- Small gray label, then the big card: white background, rounded corners, thin border, padding on all sides. Same space-y-6 trick again — everything inside this card (header, tabs, cards, table) gets even vertical spacing without you touching each piece. -->
     <div class="bg-white rounded-xl border p-6 space-y-6">
 
@@ -24,13 +24,6 @@
                 class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
                 <span>+</span> New Project
             </a>
-        </div>
-
-
-
-        <div class="flex gap-6 border-b">
-            <button class="pb-2 border-b-2 border-emerald-600 text-emerald-600 font-medium">Ongoing</button>
-            <button class="pb-2 text-gray-400">Completed</button>
         </div>
 
 
@@ -136,6 +129,15 @@
             </div>
         </div>
 
+    </div>
+
+    <div class="flex justify-end p-4">
+        <form action="/logout" method="post" class="inline">
+            <button onclick="logout()"
+                class="rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-black hover:bg-gray-700">
+                Logout
+            </button>
+        </form>
     </div>
 </div>
 {% endblock %}
