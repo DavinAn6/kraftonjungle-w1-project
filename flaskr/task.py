@@ -20,6 +20,14 @@ def dashboard():
     return render_template("dashboard.html", projects=projects, name=name)
 
 
+
+
+
+
+
+
+
+
 @task.route("/api/tasks/<project_id>", methods=["GET"])
 @login_required
 def get_tasks(project_id):
@@ -64,8 +72,6 @@ def add_task():
         return jsonify({"error": "Project not found"}), 404
 
 
-
-
     task = {
         "project_id": ObjectId(data["project_id"]),
         "agenda": data["agenda"],
@@ -78,7 +84,7 @@ def add_task():
     task["_id"] = result.inserted_id
 
 
-    
+
     return jsonify(serialize_task(task)), 201
 
 
@@ -104,6 +110,8 @@ def delete_tasks():
     ids = [ObjectId(i) for i in data["task_ids"]]
     tasks_col.delete_many({"_id": {"$in": ids}})
     return jsonify({"deleted": len(ids)}), 200
+
+
 
 
 @task.route("/api/tasks/<task_id>", methods=["PATCH"])
