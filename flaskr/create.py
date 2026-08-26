@@ -1,6 +1,6 @@
 import json
 from bson.objectid import ObjectId
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, redirect
 from db import get_db
 
 db = get_db()
@@ -25,12 +25,7 @@ def create_project():
             "members": members,
         }
         result = projects.insert_one(new_project)
-        return f"""
-        <script>
-            alert("프로젝트 생성 성공!");
-            window.location.href = "/projects/{result.inserted_id}";
-        </script>
-        """
+        return redirect(f"/projects/{result.inserted_id}")
     return render_template("create.html")
 
 
