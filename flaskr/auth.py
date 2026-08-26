@@ -5,6 +5,7 @@ from jwt import ExpiredSignatureError, InvalidTokenError, InvalidSignatureError
 from functools import wraps
 
 from flask import (
+    g,
     request,
     render_template,
     redirect,
@@ -12,6 +13,7 @@ from flask import (
     Blueprint,
     jsonify,
 )
+from bson import ObjectId
 
 from datetime import datetime, timezone, timedelta
 import hashlib
@@ -93,10 +95,20 @@ def login_required(func):
         """
         access_token = request.cookies.get("access_token")
         payload = verify_access_token(access_token)
-        if not payload:
+        user_id = payload.get("sub") if payload else None
+        user = None
+        if ObjectId.is_valid(user_id):
+            try:
+                user = users_db.find_one({"_id": ObjectId(user_id)})
+            except PyMongoError:
+                pass
+
+        if not user:
             response = make_response(redirect("/login"))
             response.delete_cookie("access_token")
+            response.delete_cookie("name")
             return response
+        g.user = user
         return func(*args, **kwargs)
 
     return validation
@@ -165,10 +177,7 @@ def post_login_form():
             samesite="Lax",
             httponly=True,
         )
-        response.set_cookie(
-            "name",
-            user["name"],
-        )
+        response.delete_cookie("name")
         return response
     return redirect("/login")
 
@@ -182,6 +191,7 @@ def logout():
     """
     response = make_response(redirect("/login"))
     response.delete_cookie("access_token")
+    response.delete_cookie("name")
 
     return response
 

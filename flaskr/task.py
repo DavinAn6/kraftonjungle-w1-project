@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, g, render_template, jsonify, request
 from bson import ObjectId
 
 from db import get_db
@@ -13,16 +13,18 @@ projects_col = db["projects"]
 TASK_STATUSES = {"not-started", "in-progress", "done"}
 
 
+def find_member_project(project_id):
+    return projects_col.find_one(
+        {"_id": project_id, "members.email": g.user["email"]}
+    )
+
+
 @task.route("/dashboard")
 @login_required
 def dashboard():
-    """대시보드입니다.
-    쿠키에 적힌 사용자명 기반으로 이름을 바꿔서 보여줍니다.
-
-    """
-    name = request.cookies.get("name")
-    projects = list(projects_col.find({"members.name": name}))
-    return render_template("dashboard.html", projects=projects, name=name)
+    """현재 사용자가 참여 중인 프로젝트 대시보드입니다."""
+    projects = list(projects_col.find({"members.email": g.user["email"]}))
+    return render_template("dashboard.html", projects=projects, name=g.user["name"])
 
 
 @task.route("/api/tasks/<project_id>", methods=["GET"])
@@ -35,7 +37,11 @@ def get_tasks(project_id):
     if not ObjectId.is_valid(project_id):
         return jsonify({"error": "Invalid project id"}), 400
 
-    tasks = list(tasks_col.find({"project_id": ObjectId(project_id)}))
+    project_oid = ObjectId(project_id)
+    if not find_member_project(project_oid):
+        return jsonify({"error": "Project not found"}), 404
+
+    tasks = list(tasks_col.find({"project_id": project_oid}))
     return jsonify([serialize_task(t) for t in tasks])
 
 
@@ -60,7 +66,7 @@ def add_task():
     except Exception:
         return jsonify({"error": "Invalid project id"}), 400
 
-    project = projects_col.find_one({"_id": project_oid})
+    project = find_member_project(project_oid)
     if not project:
         return jsonify({"error": "Project not found"}), 404
 
@@ -96,7 +102,13 @@ def delete_tasks():
     ):
         return jsonify({"error": "Invalid task ids"}), 400
 
-    ids = [ObjectId(task_id) for task_id in task_ids]
+    ids = list({ObjectId(task_id) for task_id in task_ids})
+    task_docs = list(tasks_col.find({"_id": {"$in": ids}}))
+    if len(task_docs) != len(ids) or any(
+        not find_member_project(task_doc["project_id"]) for task_doc in task_docs
+    ):
+        return jsonify({"error": "Task not found"}), 404
+
     result = tasks_col.delete_many({"_id": {"$in": ids}})
     return jsonify({"deleted": result.deleted_count}), 200
 
@@ -117,6 +129,10 @@ def update_task(task_id):
         return jsonify({"error": "No valid fields"}), 400
     if "status" in updates and updates["status"] not in TASK_STATUSES:
         return jsonify({"error": "Invalid status"}), 400
+
+    task_doc = tasks_col.find_one({"_id": ObjectId(task_id)})
+    if not task_doc or not find_member_project(task_doc["project_id"]):
+        return jsonify({"error": "Task not found"}), 404
 
     result = tasks_col.update_one({"_id": ObjectId(task_id)}, {"$set": updates})
     if result.matched_count == 0:
