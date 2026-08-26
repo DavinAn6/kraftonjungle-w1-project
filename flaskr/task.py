@@ -9,6 +9,8 @@ task = Blueprint("task", __name__)
 
 db = get_db()
 tasks_col = db["tasks"]
+projects_col = db["projects"]
+TASK_STATUSES = {"not-started", "in-progress", "done"}
 
 
 @task.route("/dashboard")
@@ -19,7 +21,7 @@ def dashboard():
 
     """
     name = request.cookies.get("name")
-    projects = list(db.project_info.find({"members": name}))
+    projects = list(projects_col.find({"members.name": name}))
     return render_template("dashboard.html", projects=projects, name=name)
 
 
@@ -30,6 +32,9 @@ def get_tasks(project_id):
 
     1. 주 프로젝트의 ObjectId로 구분합니다.
     """
+    if not ObjectId.is_valid(project_id):
+        return jsonify({"error": "Invalid project id"}), 400
+
     tasks = list(tasks_col.find({"project_id": ObjectId(project_id)}))
     return jsonify([serialize_task(t) for t in tasks])
 
@@ -37,8 +42,8 @@ def get_tasks(project_id):
 @task.route("/api/tasks", methods=["POST"])
 @login_required
 def add_task():
-    data = request.get_json()
-    if not data:
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
         return jsonify({"error": "Invalid request"}), 400
 
     required = ["project_id", "agenda", "due_date", "owner"]
@@ -46,12 +51,16 @@ def add_task():
     if missing:
         return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
 
+    status = data.get("status", "not-started")
+    if status not in TASK_STATUSES:
+        return jsonify({"error": "Invalid status"}), 400
+
     try:
         project_oid = ObjectId(data["project_id"])
     except Exception:
         return jsonify({"error": "Invalid project id"}), 400
 
-    project = db.project_info.find_one({"_id": project_oid})
+    project = projects_col.find_one({"_id": project_oid})
     if not project:
         return jsonify({"error": "Project not found"}), 404
 
@@ -60,7 +69,7 @@ def add_task():
         "agenda": data["agenda"],
         "due_date": data["due_date"],
         "owner": data["owner"],
-        "status": data.get("status", "Not Started"),
+        "status": status,
     }
 
     result = tasks_col.insert_one(task)
@@ -78,20 +87,39 @@ def serialize_task(task):
 @task.route("/api/tasks", methods=["DELETE"])
 @login_required
 def delete_tasks():
-    data = request.get_json()
-    ids = [ObjectId(i) for i in data["task_ids"]]
-    tasks_col.delete_many({"_id": {"$in": ids}})
-    return jsonify({"deleted": len(ids)}), 200
+    data = request.get_json(silent=True) or {}
+    task_ids = data.get("task_ids")
+    if (
+        not isinstance(task_ids, list)
+        or not task_ids
+        or any(not ObjectId.is_valid(task_id) for task_id in task_ids)
+    ):
+        return jsonify({"error": "Invalid task ids"}), 400
+
+    ids = [ObjectId(task_id) for task_id in task_ids]
+    result = tasks_col.delete_many({"_id": {"$in": ids}})
+    return jsonify({"deleted": result.deleted_count}), 200
 
 
 @task.route("/api/tasks/<task_id>", methods=["PATCH"])
 @login_required
 def update_task(task_id):
-    data = request.get_json()
+    if not ObjectId.is_valid(task_id):
+        return jsonify({"error": "Invalid task id"}), 400
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid request"}), 400
 
     allowed_fields = ["agenda", "due_date", "owner", "status"]
     updates = {k: v for k, v in data.items() if k in allowed_fields}
+    if not updates:
+        return jsonify({"error": "No valid fields"}), 400
+    if "status" in updates and updates["status"] not in TASK_STATUSES:
+        return jsonify({"error": "Invalid status"}), 400
 
-    tasks_col.update_one({"_id": ObjectId(task_id)}, {"$set": updates})
+    result = tasks_col.update_one({"_id": ObjectId(task_id)}, {"$set": updates})
+    if result.matched_count == 0:
+        return jsonify({"error": "Task not found"}), 404
 
     return jsonify({"updated": True}), 200

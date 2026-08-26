@@ -2,14 +2,13 @@ $(document).ready(function () {
     // 1. figure out the default (mirrors what Jinja already picked)
     let currentProjectId = $(".project-card").first().data("project");
 
-    if (currentProjectId) {
-        loadTasks(currentProjectId);
-    } else {
-        $("tbody").empty();
-    }
-
     // 2. for viewing different projects / reusable function
     function loadTasks(projectId) {
+        if (!projectId) {
+            $("tbody").empty();
+            return;
+        }
+
         $.ajax({
             url: "/api/tasks/" + projectId,
             method: "GET",
@@ -18,17 +17,20 @@ $(document).ready(function () {
 
                 tasks.forEach(function (task, index) {  // 2. loop through each task
                     $("tbody").append(buildTaskRow(task, index + 1));
-                    $("tbody select").each(function () { updateStatusColor(this) });
                 });
+                $("tbody select").each(function () { updateStatusColor(this); });
                 $("#deleteTasksBtn").addClass("hidden");
             }
         });
     }
 
+    // 3. call it immediately "on page load"
+    loadTasks(currentProjectId);
+
     // 4. Polling to check if others have updated tasks. 30000ms = 30 seconds
     setInterval(function () {
         const anyChecked = $("tbody input[type='checkbox']:checked").length > 0;
-        if (!anyChecked) {
+        if (currentProjectId && !anyChecked) {
             loadTasks(currentProjectId);
         }
     }, 30000);
@@ -41,9 +43,6 @@ $(document).ready(function () {
         $(this).removeClass("border").addClass("border-2 bg-emerald-50");
         loadTasks(currentProjectId);
     });
-
-
-
 
     // open modal
     $("#newTaskBtn").on("click", function () {
@@ -71,29 +70,19 @@ $(document).ready(function () {
         addTask();
     });
 
-
-
     function addTask() {
+        const task = {
+            project_id: currentProjectId,
+            agenda: $("#taskAgenda").val().trim(),
+            due_date: $("#taskDueDate").val(),
+            owner: $("#taskOwner").val().trim(),
+            status: "not-started"
+        };
 
-        // Validation Check ———————————————————————————————————————————————————
-        // 1) In case there is no project 
-        if (!currentProjectId) {
-            alert("프로젝트를 먼저 추가해주세요.");
-            return;
-        }
-        // 2) In case user input is invalid 
-        if (!task.agenda || !task.due_date || !task.owner) {
+        if (!task.project_id || !task.agenda || !task.due_date || !task.owner) {
             alert("모든 항목을 기재해주세요.");
             return;
         }
-
-        const task = {
-            project_id: currentProjectId,
-            agenda: $("#taskAgenda").val(),
-            due_date: $("#taskDueDate").val(),
-            owner: $("#taskOwner").val(),
-            status: "not-started"   // pick ONE casing/format and use it everywhere
-        };
 
         $.ajax({
             url: "/api/tasks",
@@ -107,12 +96,12 @@ $(document).ready(function () {
                 $("#taskModal").addClass("hidden");
                 $("#taskModal input").val("");
             },
-            // 3) If backend server responds with error, alert user
             error: function (xhr) {
-                alert(xhr.responseJSON?.error || "Something went wrong.");
+                alert(xhr.responseJSON?.error || "Task 저장에 실패했습니다.");
             }
         });
     }
+
 
     $(document).on("change", "tbody input[type='checkbox']", function () {
         // grey out this specific row if checked
@@ -147,73 +136,44 @@ $(document).ready(function () {
     });
 
 
-    $(document).on("blur", ".task-field", function () {
-        const taskId = $(this).closest("tr").data("task-id");
-        const field = $(this).data("field");
-        const value = $(this).val();
-
-        $.ajax({
-            url: "/api/tasks/" + taskId,
-            method: "PATCH",
-            contentType: "application/json",
-            data: JSON.stringify({ [field]: value })
-        });
-    });
 });
 
 function buildTaskRow(task, index) {
+    const agenda = $("<div>").text(task.agenda ?? "").html();
+    const dueDate = $("<div>").text(task.due_date ?? "").html();
+    const owner = $("<div>").text(task.owner ?? "").html();
+
     return `
     <tr class="border-b" data-task-id="${task._id}">
-       <td class="py-3 pl-3"><input type="checkbox"></td>
-       <td class="py-3 text-gray-400">${index}</td>
-      
-
-       <td class="py-3">
-            <input type="text" value="${task.agenda}" 
-            class="task-field bg-transparent border border-transparent hover:border-gray-300 focus:border-emerald-500 focus:bg-white rounded px-1 outline-none w-full"
-            data-field="agenda">
-       </td>
-       
-        <td class="py-3">
-            <input type="date" value="${task.due_date}" 
-            class="task-field bg-transparent border border-transparent hover:border-gray-300 focus:border-emerald-500 focus:bg-white rounded px-1 outline-none"
-            data-field="due_date" data-task-id="${task._id}">
-        </td>
-       
-       
-       <td class="py-3">
-            <input type="text" value="${task.owner}" 
-            class="task-field bg-transparent border border-transparent hover:border-gray-300 focus:border-emerald-500 focus:bg-white rounded px-1 outline-none w-full"
-            data-field="agenda">
-       </td>
-
-        <td class="py-3">
-            <select class="rounded-full border-0 px-3 py-1 text-xs font-medium" 
-                    onchange="updateStatusColor(this); updateTaskStatus(this);"
-                    data-task-id="${task._id}">
-                <option value="not-started" ${task.status === "not-started" ? "selected" : ""}>Not started</option>
-                <option value="in-progress" ${task.status === "in-progress" ? "selected" : ""}>In progress</option>
-                <option value="done" ${task.status === "done" ? "selected" : ""}>Done</option>
-            </select>
-        </td>
-       
+      <td class="py-3 pl-3"><input type="checkbox"></td>
+      <td class="py-3 text-gray-400">${index}</td>
+      <td class="py-3">${agenda}</td>
+      <td class="py-3">${dueDate}</td>
+      <td class="py-3">${owner}</td>
+      <td class="py-3">
+        <select class="rounded-full border-0 px-3 py-1 text-xs font-medium"
+                data-task-id="${task._id}"
+                onchange="updateStatusColor(this); updateTaskStatus(this);">
+          <option value="not-started" ${task.status === "not-started" ? "selected" : ""}>Not started</option>
+          <option value="in-progress" ${task.status === "in-progress" ? "selected" : ""}>In progress</option>
+          <option value="done" ${task.status === "done" ? "selected" : ""}>Done</option>
+        </select>
+      </td>
     </tr>
   `;
 }
 
-
 function updateTaskStatus(select) {
-    const taskId = $(select).data("task-id");
-    const newStatus = select.value;
-
     $.ajax({
-        url: "/api/tasks/" + taskId,
+        url: "/api/tasks/" + $(select).data("task-id"),
         method: "PATCH",
         contentType: "application/json",
-        data: JSON.stringify({ status: newStatus })
+        data: JSON.stringify({ status: select.value }),
+        error: function () {
+            alert("상태 저장에 실패했습니다.");
+        }
     });
 }
-
 
 function updateStatusColor(select) {
     select.classList.remove(

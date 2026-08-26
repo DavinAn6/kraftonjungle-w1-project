@@ -43,6 +43,7 @@ def post_create_form():
 
 @create.route("/api/users/search")
 def search_member():
+    """초대할 수 있는 팀원 목록을 조회할 수 있는 API입니다."""
     search_member = request.args.get("search_member")
     results = users.find(
         {
