@@ -27,10 +27,44 @@ def get_tasks(project_id):
     return jsonify([serialize_task(t) for t in tasks])
 
 
+
+
+
+
+
+
+
 @task.route("/api/tasks", methods=["POST"])
 @login_required
 def add_task():
     data = request.get_json()
+
+
+    # Validation Check —————————————————————————————————————————————
+    # 1) Is the request actually contain JSON data? Or did someone send empty or broken request?
+    if not data: 
+        return jsonify({"error": "Invalid request"}), 400
+
+    # 2) Are all the fields filled out by the user?
+    required = ["project_id", "agenda", "due_date", "owner"]
+    missing = [f for f in required if not data.get(f)]
+    if missing:
+        return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+    
+    # 3) Is project_id properly formatted? 
+    # If project_id can't be converted to ObjectId, it's not valid format
+    try:
+        project_oid = ObjectId(data["project_id"])
+    except Exception:
+        return jsonify({"error": "Invalid project id"}), 400
+    
+    # 4) Does project exist? Might not exist even if project_id does
+    project = db.project_info.find_one({"_id": project_oid})
+    if not project:
+        return jsonify({"error": "Project not found"}), 404
+
+
+
 
     task = {
         "project_id": ObjectId(data["project_id"]),
@@ -43,7 +77,18 @@ def add_task():
     result = tasks_col.insert_one(task)
     task["_id"] = result.inserted_id
 
+
+    
     return jsonify(serialize_task(task)), 201
+
+
+
+
+
+
+
+
+
 
 
 def serialize_task(task):
