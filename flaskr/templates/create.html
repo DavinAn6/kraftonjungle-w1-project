@@ -22,7 +22,14 @@
     <input type="date" id="end_date" name="end_date">
 </fieldset>
 
-<button type="submit">프로젝트 생성</button>
+<fieldset>  
+    <legend>팀원 관리</legend>  
+    <input type="text" id="search-box">  
+    <button type="button" id="search-member">팀원 검색</button>  
+    <div id="search-result"></div> <div id="added-member"></div>
+</fieldset>
+<button type="submit" id="submit-btn">프로젝트 생성</button>
 </form>
+<script src="{{url_for('static', filename='create.js')}}"></script>
 
 {% endblock %}
