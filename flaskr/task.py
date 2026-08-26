@@ -31,8 +31,13 @@ def dashboard():
 @task.route("/api/tasks/<project_id>", methods=["GET"])
 @login_required
 def get_tasks(project_id):
+    project = db.project_info.find_one({"_id": ObjectId(project_id)})
     tasks = list(tasks_col.find({"project_id": ObjectId(project_id)}))
-    return jsonify([serialize_task(t) for t in tasks])
+    return jsonify({
+        "members": project["members"],
+        "tasks": [serialize_task(t) for t in tasks]
+    })
+
 
 
 

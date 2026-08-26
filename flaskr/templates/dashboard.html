@@ -117,7 +117,9 @@
 
                 <div class="space-y-1">
                     <label class="text-sm font-medium text-gray-700">Owner</label>
-                    <input id="taskOwner" placeholder="e.g. 안다빈" class="border w-full p-2 rounded">
+                    <select id="taskOwner" class="border w-full p-2 rounded">
+                        <option value="">Select a member</option>
+                    </select>
                 </div>
 
                 <button id="submitTask" class="bg-emerald-500 text-white px-4 py-2 rounded-lg w-full">Add</button>
@@ -151,14 +153,17 @@
             $.ajax({
                 url: "/api/tasks/" + projectId,
                 method: "GET",
-                success: function (tasks) {
-                    $("tbody").empty(); // 1. clear old rows
+                success: function (response) {
+                    $("tbody").empty();
 
-                    tasks.forEach(function (task, index) {  // 2. loop through each task
+                    response.tasks.forEach(function (task, index) {
                         $("tbody").append(buildTaskRow(task, index + 1));
-                        $("tbody select").each(function () { updateStatusColor(this) });
                     });
+
+                    $("tbody select").each(function () { updateStatusColor(this); });
                     $("#deleteTasksBtn").addClass("hidden");
+
+                    populateOwnerDropdown(response.members);   // new
                 }
             });
         }
@@ -211,26 +216,29 @@
 
 
 
+
         function addTask() {
 
-            // Validation Check ———————————————————————————————————————————————————
-            // 1) In case there is no project 
             if (!currentProjectId) {
                 alert("프로젝트를 먼저 추가해주세요.");
                 return;
             }
-            // 2) In case user input is invalid 
-            if (!task.agenda || !task.due_date || !task.owner) {
+
+            const agenda = $("#taskAgenda").val();
+            const dueDate = $("#taskDueDate").val();
+            const owner = $("#taskOwner").val();
+
+            if (!agenda || !dueDate || !owner) {
                 alert("모든 항목을 기재해주세요.");
                 return;
             }
 
             const task = {
                 project_id: currentProjectId,
-                agenda: $("#taskAgenda").val(),
-                due_date: $("#taskDueDate").val(),
-                owner: $("#taskOwner").val(),
-                status: "not-started"   // pick ONE casing/format and use it everywhere
+                agenda: agenda,
+                due_date: dueDate,
+                owner: owner,
+                status: "not-started"
             };
 
             $.ajax({
@@ -245,7 +253,6 @@
                     $("#taskModal").addClass("hidden");
                     $("#taskModal input").val("");
                 },
-                // 3) If backend server responds with error, alert user
                 error: function (xhr) {
                     alert(xhr.responseJSON?.error || "Something went wrong.");
                 }
@@ -374,6 +381,17 @@
         };
 
         select.classList.add(...colors[select.value]);
+    }
+
+
+    function populateOwnerDropdown(members) {
+        const $select = $("#taskOwner");
+        $select.empty();
+        $select.append('<option value="">Select a member</option>');
+
+        members.forEach(function (member) {
+            $select.append(`<option value="${member}">${member}</option>`);
+        });
     }
 
 
