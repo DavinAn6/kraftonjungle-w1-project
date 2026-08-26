@@ -14,6 +14,7 @@ from flask import (
 
 from datetime import datetime, timezone, timedelta
 import hashlib
+from hmac import compare_digest
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
@@ -49,10 +50,10 @@ def verify_access_token(token):
         return None
 
 
-def generate_token(username, expiration=30):
+def generate_token(user_id, expiration=30):
     """JWT 토큰을 발급합니다.
 
-    1. payload에는 user_id, username, 만료 시간이 설정됩니다.
+    1. payload에는 sub(mongoDB _id), iat(현재 시간), exp(만료 시간=30분후)가 설정됩니다.
     2. secret_key를 env 파일에서 가져옵니다.
     3. JWT 토큰을 인코딩하여 반환합니다. HS256 기준입니다.
     """
@@ -60,10 +61,11 @@ def generate_token(username, expiration=30):
         "alg": "HS256",
         "typ": "JWT",
     }
+    now = datetime.now(timezone.utc)
     payload = {
-        "user_id": 1,  # TODO: 추후 DB 연동 시, mongoDB의 _id 또는 user_id 항목으로 교체
-        "sub": username,  # TODO: ID 대신 이메일 고려
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=expiration),
+        "sub": str(user_id),  # TODO: ID 대신 이메일 고려
+        "iat": now,
+        "exp": now + timedelta(minutes=expiration),
     }
     secret_key = os.getenv("JWT_SECRET_KEY")
 
@@ -92,7 +94,6 @@ def login_required(func):
         if not payload:
             response = make_response(redirect("/login"))
             response.delete_cookie("access_token")
-            response.delete_cookie("username")
             return response
         return func(*args, **kwargs)
 
@@ -151,14 +152,19 @@ def post_login_form():
     except PyMongoError:
         return redirect("/login")
 
+    # TODO: Production 환경에서는 secure=True
     if verify_password(user=user, password=password):
-        access_token = generate_token(username=username, expiration=30)
+        access_token = generate_token(user_id=user["_id"], expiration=30)
 
         response = make_response(
             render_template("auth/login_success.html", username=username)
         )
-        response.set_cookie("access_token", access_token)
-        response.set_cookie("username", username)
+        response.set_cookie(
+            "access_token",
+            access_token,
+            samesite="Lax",
+            httponly=True,
+        )
 
         return response
     return redirect("/login")
@@ -234,7 +240,7 @@ def post_signin_form():
         users_db.insert_one(data)
         return redirect("/login")
     except PyMongoError:
-        return render_template("/signin_failed.html")
+        return redirect("/signin")
 
 
 @auth.post("/signin/check/username")
@@ -303,4 +309,4 @@ def verify_password(user, password):
     db_password = user["password"]["hashed"]
 
     hashed_password = encode_password(password=password, salt=db_salt)
-    return hashed_password == db_password
+    return compare_digest(hashed_password, db_password)
