@@ -1,4 +1,3 @@
-from auth import login_required
 from flask import Blueprint, render_template, request, jsonify
 from db import get_db
 db = get_db()
@@ -8,7 +7,6 @@ users = db["users"]
 create = Blueprint("create", __name__)
 
 @create.route("/create", methods=["GET", "POST"])
-@login_required
 def create_project():
     if request.method == "POST":
         new_project = {
@@ -28,7 +26,6 @@ def create_project():
     return render_template("create.html")
 
 @create.route("/api/users/search")
-@login_required
 def search_member():
     search_member = request.args.get("search_member")
     results = users.find(
