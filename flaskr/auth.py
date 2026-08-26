@@ -1,6 +1,6 @@
 import os
 import jwt
-from jwt import ExpiredSignatureError, InvalidTokenError
+from jwt import ExpiredSignatureError, InvalidTokenError, InvalidSignatureError
 from functools import wraps
 
 from flask import (
@@ -12,6 +12,7 @@ from flask import (
 )
 
 from datetime import datetime, timezone, timedelta
+import hashlib
 
 # TODO: in-memory. Production or DB 연동 시 제거
 users = {
@@ -41,6 +42,8 @@ def verify_access_token(token):
         return None
     except InvalidTokenError:
         return None
+    except InvalidSignatureError:
+        return None
 
 
 def generate_token(username, expiration=30):
@@ -50,14 +53,19 @@ def generate_token(username, expiration=30):
     2. secret_key를 env 파일에서 가져옵니다.
     3. JWT 토큰을 인코딩하여 반환합니다. HS256 기준입니다.
     """
+    headers = {
+        "alg": "HS256",
+        "typ": "JWT",
+    }
     payload = {
         "user_id": 1,  # TODO: 추후 DB 연동 시, mongoDB의 _id 또는 user_id 항목으로 교체
-        "username": username,
+        "sub": username,
         "exp": datetime.now(timezone.utc) + timedelta(minutes=expiration),
     }
     secret_key = os.getenv("JWT_SECRET_KEY")
 
     encoded_token = jwt.encode(
+        headers=headers,
         payload=payload,
         key=secret_key,
         algorithm="HS256",
@@ -68,10 +76,21 @@ def generate_token(username, expiration=30):
 def login_required(func):
     @wraps(func)
     def validation(*args, **kwargs):
+        """JWT 검증 데코레이터 입니다.
+        토큰이 유효하지 않을 시 브라우저 쿠키에 있는 토큰을 파기합니다.
+        사용법은 인증이 필요한 API 아래에 적으시면 됩니다.
+
+        ex)
+        @app.route("URL")
+        @login_required <- 여기
+        """
         access_token = request.cookies.get("access_token")
         payload = verify_access_token(access_token)
         if not payload:
-            return redirect("/login")
+            response = make_response(redirect("/login"))
+            response.delete_cookie("access_token")
+            response.delete_cookie("username")
+            return response
         return func(*args, **kwargs)
 
     return validation
@@ -98,7 +117,7 @@ def get_login_form():
     access_token = request.cookies.get("access_token")
     payload = verify_access_token(token=access_token)
     if payload:
-        username = payload["username"]
+        username = payload["sub"]
         if username in users:
             return redirect("/index")
     return render_template("auth/login_page.html")
@@ -109,14 +128,13 @@ def post_login_form():
 
     1. JWT 토큰을 검증하고, 유효할 시 /index로 리디렉션 됩니다.
     2. JWT 토큰이 유효하지 않을 시 로그인 합니다.
-
     3. 아이디와 패스워드 길이를 검사합니다. 최대 길이는 50입니다.
     4. 아이디와 패스워드가 DB에 존재할 경우, JWT 토큰을 새로 발급합니다. 만료 시간은 30분 입니다.
     """
     access_token = request.cookies.get("access_token")
     payload = verify_access_token(token=access_token)
     if payload:
-        username = payload["username"]
+        username = payload["sub"]
         if username in users:
             return redirect("/index")
 
@@ -128,7 +146,9 @@ def post_login_form():
     ):
         return redirect("/login")
 
-    if username in users and users[username] == password:  # TODO: 추후 DB 쿼리로 교체
+    if (
+        username in users and users[username] == password
+    ):  # TODO: 추후 DB 쿼리로 교체. 해시
         access_token = generate_token(username=username, expiration=30)
 
         response = make_response(
@@ -156,3 +176,96 @@ def logout():
     response.delete_cookie("username")
 
     return response
+
+
+@auth.route("/signin", methods=["GET", "POST"])
+def signin():
+    """회원가입 페이지에 대한 GET, POST 요청을 분리합니다."""
+    if request.method == "GET":
+        return get_signin_form()
+    else:
+        return
+
+
+def get_signin_form():
+    """회원가입 페이지를 반환합니다.
+
+    1. 현재 로그인 되어있을 시 /index 페이지로 리디렉션 됩니다.
+    2. 로그인 되어있지 않으면 회원가입페이지를 반환합니다.
+    """
+    access_token = request.cookies.get("access_token")
+    payload = verify_access_token(token=access_token)
+    if payload:
+        username = payload["sub"]
+        if username in users:
+            return redirect("/index")
+    return render_template("auth/signin_page.html")
+
+
+def post_signin_form():
+    """사용자의 정보를 받고, 회원가입을 시도합니다.
+
+    1. JWT 토큰을 검증하고, 유효할 시 /index로 리디렉션 됩니다.
+    2. JWT 토큰이 유효하지 않을 시 회원가입 합니다.
+    3. 공백 제거와 아이디와 패스워드 길이를 검사하고 유효한지 확인합니다.
+    """
+    access_token = request.cookies.get("access_token")
+    payload = verify_access_token(token=access_token)
+    if payload:
+        username = payload["sub"]
+        if username in users:
+            return redirect("/index")
+
+    name = request.form.get("name").rstrip()
+    email = request.form.get("email").rstrip()
+
+    password = request.form.get("password").rstrip()
+    salt = os.urandom(16)
+    password = encode_password(password=password, salt=salt)
+
+    jungle = int(request.form.get("jungle"))
+    classroom = int(request.form.get("classroom"))
+
+
+def encode_password(password, salt):
+    """비밀번호 해시함수입니다.
+
+    비밀번호는 DB에 평문으로 저장하지 않고, 해시값으로 저장합니다.
+    비밀번호 검증시, 입력값을 저장되어있는 해시값과 비교하기 위함입니다.
+    같은 비밀번호라도, salt값에 따라 달라지므로 사용자를 구분할 수 있습니다.
+
+    1. 비밀번호를 UTF-8로 인코딩합니다.
+    2. 16바이트 Salt값을 생성합니다.
+    3. sha256 알고리즘으로 100000회 반복하여 생성합니다.
+    """
+    password = password.encode("utf-8")
+
+    hashed_password = hashlib.pbkdf2_hmac(
+        hash_name="sha256",
+        password=password,
+        salt=salt,
+        iterations=100000,
+    ).hex()
+
+    return hashed_password
+
+
+def decode_password(username, password, salt):
+    """비밀번호 검증 함수입니다.
+
+    비밀번호를 생성할 때 같이 저장했던 솔트값을 이용하여 비교합니다.
+    DB에 저장되어있는 해시값과, 현재 받은 비밀번호를 다시 해시한 값을 비교하여
+    동일한지 검증합니다.
+    """
+
+    password = password.encode("utf-8")
+
+    hashed_password = hashlib.pbkdf2_hmac(
+        hash_name="sha256",
+        password=password,
+        salt=salt,
+        iterations=100000,
+    ).hex()
+
+    # TODO: DB 연동하기.
+    return hashed_password == users[username]

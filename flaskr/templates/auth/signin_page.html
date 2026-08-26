@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+
+<body>
+    <div class="signin-wrapper">
+        <h2>Login</h2>
+        <form action="/signin" method="post" id="signin_form">
+            이름: <input type="text" id="name" name="name" placeholder="이름" maxlength="50" required />
+
+
+
+            <br>
+            이메일: <input type="email" id="email" name="email" placeholder="이메일" maxlength="320" required /><br>
+            비밀번호: <input type="password" id="password" name="password" placeholder="Password" maxlength="50"
+                required /><br>
+            기수:
+            <select id="jungle" name="jungle">
+                <option value="13">13</option>
+            </select><br>
+            강의장:
+            <select id="classroom" name="classroom">
+                <option value="301">301</option>
+                <option value="302">302</option>
+                <option value="303">303</option>
+                <option value="304">304</option>
+                <option value="305">305</option>
+                <option value="306">306</option>
+                <option value="307">307</option>
+                <option value="308">308</option>
+                <option value="309">309</option>
+                <option value="310">310</option>
+            </select>
+
+            <br><br>
+            <button>이 정보로 가입</button>
+        </form>
+    </div>
+    <script>
+
+    </script>
+    <script src="https://jquery.com"></script>
+</body>
+
+
+</html>
