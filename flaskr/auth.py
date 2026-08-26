@@ -122,24 +122,24 @@ def get_login_form():
 
     1. 쿠키에서 JWT 토큰을 가져옵니다.
     2. verify_access_token 으로 JWT 토큰을 검증합니다.
-    3. 토큰이 유효하고, username이 DB에 존재하면 /index 페이지로 리디렉션 됩니다.
+    3. 토큰이 유효하고, username이 DB에 존재하면 /dashboard 페이지로 리디렉션 됩니다.
     4. 토큰 검증 실패 시 로그인 페이지를 반환합니다.
     """
     if is_logged_in():
-        return redirect("/index")
+        return redirect("/dashboard")
     return render_template("auth/login_page.html")
 
 
 def post_login_form():
     """사용자의 아이디, 비밀번호를 받고 로그인을 시도합니다.
 
-    1. JWT 토큰을 검증하고, 유효할 시 /index로 리디렉션 됩니다.
+    1. JWT 토큰을 검증하고, 유효할 시 /dashboard로 리디렉션 됩니다.
     2. JWT 토큰이 유효하지 않을 시 로그인 합니다.
     3. 아이디와 패스워드 길이를 검사합니다. 최대 길이는 50입니다.
     4. 아이디와 패스워드가 DB에 존재할 경우, JWT 토큰을 새로 발급합니다. 만료 시간은 30분 입니다.
     """
     if is_logged_in():
-        return redirect("/index")
+        return redirect("/dashboard")
 
     username = request.form.get("username", "").rstrip()
     password = request.form.get("password", "")
@@ -159,7 +159,7 @@ def post_login_form():
     if verify_password(user=user, password=password):
         access_token = generate_token(user_id=user["_id"], expiration=30)
 
-        response = make_response(redirect("/index"))
+        response = make_response(redirect("/dashboard"))
         response.set_cookie(
             "access_token",
             access_token,
@@ -199,23 +199,23 @@ def signin():
 def get_signin_form():
     """회원가입 페이지를 반환합니다.
 
-    1. 현재 로그인 되어있을 시 /index 페이지로 리디렉션 됩니다.
+    1. 현재 로그인 되어있을 시 /dashboard 페이지로 리디렉션 됩니다.
     2. 로그인 되어있지 않으면 회원가입페이지를 반환합니다.
     """
     if is_logged_in():
-        return redirect("/index")
+        return redirect("/dashboard")
     return render_template("auth/signin_page.html")
 
 
 def post_signin_form():
     """사용자의 정보를 받고, 회원가입을 시도합니다.
 
-    1. JWT 토큰을 검증하고, 유효할 시 /index로 리디렉션 됩니다.
+    1. JWT 토큰을 검증하고, 유효할 시 /dashboard로 리디렉션 됩니다.
     2. JWT 토큰이 유효하지 않을 시 회원가입 합니다.
     3. 각 항목이 DB에 들어가도 문제없을지 검증합니다.
     """
     if is_logged_in():
-        return redirect("/index")
+        return redirect("/dashboard")
 
     name = request.form.get("name", "").rstrip()
     if not 1 <= len(name) <= 50:

@@ -1,140 +1,47 @@
-<!DOCTYPE html>
-<html lang="ko">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
+{% block content %}
 
-<body>
-    <div class="signin-wrapper">
-        <h2>Login</h2>
-        <form id="signin_form" action="/signin" method="post">
-            이름: <input type="text" id="name" name="name" placeholder="이름" maxlength="50" required /><br>
-            이메일: <input type="email" id="email" name="email" placeholder="이메일" maxlength="320" required />
-            <button type="button" onclick="chkEmail()">이메일 중복 확인</button><br>
-            <pre id="useEmail"></pre>
-            기수:
-            <select id="jungle" name="jungle">
-                <option value="13">13</option>
-            </select><br>
-            강의장:
-            <select id="classroom" name="classroom">
-                <option value="301">301</option>
-                <option value="302">302</option>
-                <option value="303">303</option>
-                <option value="304">304</option>
-                <option value="305">305</option>
-                <option value="306">306</option>
-                <option value="307">307</option>
-                <option value="308">308</option>
-                <option value="309">309</option>
-                <option value="310">310</option>
-            </select><br>
-            ID: <input type="text" id="username" name="username" placeholder="아이디" maxlength="50" required />
-            <button type="button" onclick="chkID()">아이디 중복 확인</button><br>
-            <pre id="useUsername"></pre>
-            <br>
-            비밀번호: <input type="password" id="password" name="password" placeholder="비밀번호" minlength="8" maxlength="50"
-                required /><br>
-            비밀번호 확인: <input type="password" id="chkpassword" name="chkpassword" placeholder="비밀번호 확인" minlength="8"
-                maxlength="50" onkeyup="chkPassword()" required /><br>
-            <pre id="usePasswd"></pre>
+<div class="signin-wrapper">
+    <h2>Login</h2>
+    <form id="signin_form" action="/signin" method="post">
+        이름: <input type="text" id="name" name="name" placeholder="이름" maxlength="50" required /><br>
+        이메일: <input type="email" id="email" name="email" placeholder="이메일" maxlength="320" required />
+        <button type="button" onclick="chkEmail()">이메일 중복 확인</button><br>
+        <pre id="useEmail"></pre>
+        기수:
+        <select id="jungle" name="jungle">
+            <option value="13">13</option>
+        </select><br>
+        강의장:
+        <select id="classroom" name="classroom">
+            <option value="301">301</option>
+            <option value="302">302</option>
+            <option value="303">303</option>
+            <option value="304">304</option>
+            <option value="305">305</option>
+            <option value="306">306</option>
+            <option value="307">307</option>
+            <option value="308">308</option>
+            <option value="309">309</option>
+            <option value="310">310</option>
+        </select><br>
+        ID: <input type="text" id="username" name="username" placeholder="아이디" maxlength="50" required />
+        <button type="button" onclick="chkID()">아이디 중복 확인</button><br>
+        <pre id="useUsername"></pre>
+        <br>
+        비밀번호: <input type="password" id="password" name="password" placeholder="비밀번호" minlength="8" maxlength="50"
+            required /><br>
+        비밀번호 확인: <input type="password" id="chkpassword" name="chkpassword" placeholder="비밀번호 확인" minlength="8"
+            maxlength="50" onkeyup="chkPassword()" required /><br>
+        <pre id="usePasswd"></pre>
 
-            <br><br>
-            <button type="submit">이 정보로 가입</button>
-        </form>
-    </div>
-    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
-    <script>
-        var isEmail = "";
-        var isUsername = "";
-        var isPassword = "";
-        /** TODO: ajax로 사용가능한 이메일인지 검증**/
-        function chkEmail() {
-            var email = $("#email").val();
-            var regexp = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-            if (!regexp.test(email)) {
-                $("#useEmail").text("❌올바른 이메일 주소가 아닙니다.");
-                $("#email").focus();
-                isEmail = "";
-                return;
-            }
+        <br><br>
+        <button type="submit">이 정보로 가입</button>
+    </form>
+</div>
+{% endblock %}
 
-            $.ajax({
-                url: "/signin/check/email",
-                type: "post",
-                data: { "email": email },
-                success: function (data, status, xhr) {
-                    if (data) {
-                        $("#useEmail").text("✅사용가능한 이메일 입니다.");
-                        isEmail = email;
-                    }
-                    else {
-                        $("#useEmail").text("❌중복된 이메일 입니다.");
-                        isEmail = "";
-                    }
-                }
-            })
-            return;
-        }
-        /** TODO: ajax로 사용가능한 ID인지 검증**/
-        function chkID() {
-            var username = $("#username").val();
-            var regexp = /^[a-zA-Z0-9_-]{8,50}$/
-            if (!regexp.test(username)) {
-                $("#useUsername").text("❌아이디는 8자 이상 알파벳 소문자, 대문자, 숫자, 하이픈을 사용해주세요.");
-                $("#username").focus();
-                isUsername = "";
-                return;
-            }
-
-            $.ajax({
-                url: "/signin/check/username",
-                type: "post",
-                data: { "username": username },
-                success: function (data, status, xhr) {
-                    if (data) {
-                        $("#useUsername").text("✅사용가능한 아이디입니다.");
-                        isUsername = username;
-                    }
-                    else {
-                        $("#useUsername").text("❌중복된 아이디입니다.");
-                        isUsername = "";
-                    }
-                }
-            })
-            return;
-        }
-
-        function chkPassword() {
-            var ori_password = $("#password").val();
-            var rep_password = $("#chkpassword").val();
-
-            if (ori_password !== rep_password) {
-                $("#usePasswd").text("❌비밀번호가 다릅니다.");
-                isPassword = "";
-                return
-            }
-            $("#usePasswd").text("✅");
-            isPassword = ori_password;
-            return;
-        }
-
-        $("#signin_form").on("submit", function (event) {
-            var isValidEmail = isEmail === $("#email").val();
-            var isValidUsername = isUsername === $("#username").val();
-            var isValidPassword = isPassword === $("#password").val();
-
-            if (!(isValidEmail && isValidUsername && isValidPassword)) {
-                event.preventDefault();
-                alert("항목을 다시 점검해 주세요");
-                return;
-            }
-        })
-    </script>
-</body>
-
-</html>
+{% block scripts %}
+<script src="{{url_for('static', filename='signin.js')}}"></script>
+{ % endblock % }
