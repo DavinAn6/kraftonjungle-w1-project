@@ -7,7 +7,6 @@ from db import get_db
 from auth import login_required
 
 task = Blueprint("task", __name__)
-# Connects to local MongoDB. Database: "w1_project", Collection: "tasks".
 
 db = get_db()
 tasks_col = db["tasks"]
@@ -16,9 +15,8 @@ tasks_col = db["tasks"]
 @task.route("/dashboard")
 @login_required
 def dashboard():
-    projects = list(db.project_info.find())
-
     name = request.cookies.get("name")
+    projects = list(db.project_info.find({"members": name}))
     return render_template("dashboard.html", projects=projects, name=name)
 
 
