@@ -2,7 +2,6 @@ let selectedMembers = []
 let lastSearchedResults = []
 
 const addedMember = $("#added-member")
-
 const titleInput = $("#title");
 const startDateInput = $("#start_date")
 const endDateInput = $("#end_date")
@@ -87,7 +86,6 @@ function removeMember(email) {
     renderSelectedMembers()
     renderSearchResults()  
 }
-
 
 searchBTN.on("click", searchMember)
 searchbox.on("keydown", handleKeydown)
