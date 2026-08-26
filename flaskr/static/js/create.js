@@ -50,12 +50,14 @@ function searchMember() {
 function renderSearchResults() {
     searchResult.empty()
     if (lastSearchedResults.length === 0) {
-        searchResult.append("<div>검색 결과가 없습니다.</div>")
+        searchResult.append("<div class=\"px-3 py-2 text-gray-400\">검색 결과가 없습니다.</div>")
     } else {
         lastSearchedResults.forEach(user => {
             const isAdded = selectedMembers.some(member => member.email === user.email)
-            const buttonHtml = isAdded ? "" : `<button type="button" onclick="addMember('${user.name}', '${user.email}')">+추가</button>`
-            searchResult.append(`<div>${user.name} - ${user.email} ${buttonHtml}</div>`)
+            const buttonHtml = isAdded
+                ? `<span class="text-gray-300 text-xs font-medium">추가됨</span>`
+                : `<button type="button" class="text-emerald-600 hover:text-emerald-700 text-xs font-medium" onclick="addMember('${user.name}', '${user.email}')">+ 추가</button>`
+            searchResult.append(`<div class="flex items-center justify-between px-3 py-2 hover:bg-gray-50"><span>${user.name} <span class="text-gray-400">- ${user.email}</span></span>${buttonHtml}</div>`)
         })
     }
 }
@@ -77,7 +79,7 @@ function addMember(name, email) {
 function renderSelectedMembers() {
     addedMember.empty()
     selectedMembers.forEach(member => {
-        addedMember.append(`<span>${member.name} <button type="button" onclick="removeMember('${member.email}')">x</button></span>`)
+        addedMember.append(`<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full">${member.name}<button type="button" class="text-emerald-400 hover:text-emerald-700" onclick="removeMember('${member.email}')">✕</button></span>`)
     })
     $("#members").val(JSON.stringify(selectedMembers))
 }
