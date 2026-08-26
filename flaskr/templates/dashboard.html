@@ -34,17 +34,35 @@
         </div>
 
 
-        <div class="grid grid-cols-3 gap-4">
+        <div class="flex gap-4 overflow-x-auto pb-2">
             {% for p in projects %}
-            <div class="project-card border rounded-xl p-4 space-y-3 cursor-pointer {% if loop.first %}border-2 bg-emerald-50{% else %}border{% endif %}"
+            <div class="project-card border rounded-xl p-4 space-y-3 cursor-pointer flex-shrink-0 w-72 {% if loop.first %}border-2 border-emerald-300 bg-emerald-50{% else %}border{% endif %}"
                 data-project="{{ p._id }}">
+
                 <div class="flex items-center justify-between">
                     <span class="font-medium">{{ p.title }}</span>
-                    <a href="/project/{{ p._id }}" class="text-gray-400 hover:text-emerald-600 text-sm"
-                        onclick="event.stopPropogation();">
-                        ➡
+                    <a href="/project/{{ p._id }}" onclick="event.stopPropagation();"
+                        class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-emerald-100 hover:text-emerald-600 transition-colors">
+                        <span class="text-sm">➡</span>
                     </a>
                 </div>
+
+                <div class="text-xs text-gray-500">
+                    시작 {{ p.start_date }} · 종료 {{ p.end_date }}
+                </div>
+
+                <div class="flex flex-wrap gap-1">
+                    {% for member in p.members %}
+                    <span class="bg-gray-100 text-black-600 text-xs px-2 py-1 rounded-full border border-gray-300">{{
+                        member }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="w-full bg-gray-200 rounded-full h-1.5">
+                    <div class="bg-emerald-500 h-1.5 rounded-full" style="width: {{ p.progress }}%"></div>
+                </div>
+                <div class="text-xs text-gray-400">{{ p.progress }}% 완료</div>
+
             </div>
             {% endfor %}
         </div>
@@ -55,7 +73,7 @@
         <div class="space-y-4">
 
             <div class="flex items-center justify-between">
-                <span class="font-medium text-lg">Task Dashboard</span>
+                <span class="font-bold text-lg">Task Dashboard</span>
 
                 <div class="flex items-center gap-2">
                     <button id="deleteTasksBtn"
@@ -172,11 +190,12 @@
         // 5. click handler, unchanged except it also calls loadTasks
         $(".project-card").on("click", function () {
             currentProjectId = $(this).data("project");
-            $(".project-card").removeClass("border-2 bg-emerald-50").addClass("border");
-            $(this).removeClass("border").addClass("border-2 bg-emerald-50");
+
+            $(".project-card").removeClass("border-2 border-emerald-300 bg-emerald-50").addClass("border");
+            $(this).removeClass("border").addClass("border-2 border-emerald-300 bg-emerald-50");
+
             loadTasks(currentProjectId);
         });
-
 
 
 

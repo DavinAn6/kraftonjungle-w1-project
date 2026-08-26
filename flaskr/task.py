@@ -17,6 +17,12 @@ tasks_col = db["tasks"]
 def dashboard():
     name = request.cookies.get("name")
     projects = list(db.project_info.find({"members": name}))
+    
+    for p in projects:
+        total = db.tasks.count_documents({"project_id": p["_id"]})
+        done = db.tasks.count_documents({"project_id": p["_id"], "status": "done"})
+        p["progress"] = round((done / total) * 100) if total > 0 else 0
+
     return render_template("dashboard.html", projects=projects, name=name)
 
 
