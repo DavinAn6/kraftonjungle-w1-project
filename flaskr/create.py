@@ -1,5 +1,6 @@
-from auth import login_required
-from flask import Blueprint, render_template, request, jsonify
+import json
+from bson.objectid import ObjectId
+from flask import Blueprint, render_template, request, jsonify, redirect
 from db import get_db
 
 db = get_db()
@@ -10,29 +11,25 @@ create = Blueprint("create", __name__)
 
 
 @create.route("/create", methods=["GET", "POST"])
-@login_required
 def create_project():
     if request.method == "POST":
+        members_json = request.form.get("members")
+        members = json.loads(members_json) if members_json else []
+
         new_project = {
             "title": request.form.get("title"),
             "team": request.form.get("team"),
             "description": request.form.get("description"),
             "start_date": request.form.get("start_date"),
             "end_date": request.form.get("end_date"),
+            "members": members,
         }
-        # TODO: try ~ catch 문으로 DB 에러 분기 처리
-        projects.insert_one(new_project)
-        return """
-        <script>
-            alert("프로젝트 생성 성공!");
-            window.location.href = "/";
-        </script>
-        """
+        result = projects.insert_one(new_project)
+        return redirect(f"/projects/{result.inserted_id}")
     return render_template("create.html")
 
 
 @create.route("/api/users/search")
-@login_required
 def search_member():
     search_member = request.args.get("search_member")
     results = users.find(
