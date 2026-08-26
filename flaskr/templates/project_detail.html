@@ -6,9 +6,9 @@
 <p>기간: {{ project.start_date }} ~ {{ project.end_date }}</p>
 <h2>팀원</h2>
 <ul>
-{% for member in project.members %}
+    {% for member in project.members %}
     <li>{{ member.name }} ({{ member.email }})</li>
-{% endfor %}
+    {% endfor %}
 </ul>
 <a href="/projects/{{ project._id }}/edit">수정</a>
 <form method="post" action="/projects/{{ project._id }}/delete" onsubmit="return confirm('삭제하시겠습니까?')">

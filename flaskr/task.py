@@ -14,9 +14,7 @@ TASK_STATUSES = {"not-started", "in-progress", "done"}
 
 
 def find_member_project(project_id):
-    return projects_col.find_one(
-        {"_id": project_id, "members.email": g.user["email"]}
-    )
+    return projects_col.find_one({"_id": project_id, "members.email": g.user["email"]})
 
 
 @task.route("/dashboard")
