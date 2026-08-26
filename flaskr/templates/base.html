@@ -8,11 +8,32 @@
     <title>{% block title %}{% endblock %}</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Download Roboto font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
     <!-- Download Tailwind engine using CDN script -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        roboto: ['Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 
 <body class="bg-black min-h-screen">
+    <div class="w-full mb-6">
+        <img src="{{ url_for('static', filename='JungleTrek Logo.png') }}" class="w-full rounded-xl block"
+            alt="JungleTrek Banner">
+    </div>
 
     <!-- Two Jinja blocks allow other html file code to be inserted in between, eliminating need for repeated code -->
     {% block content %}{% endblock %}
