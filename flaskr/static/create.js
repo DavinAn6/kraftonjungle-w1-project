@@ -32,9 +32,7 @@ checkRequiredFields();
 
 //팀원 검색
 
-
 function searchMember() {
-    console.log("검색 버튼 눌림")
     const searchValue = searchbox.val()
     const url = `/api/users/search?search_member=${searchValue}`
     $.ajax({
