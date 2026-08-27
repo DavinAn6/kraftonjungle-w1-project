@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}대시보드{% endblock %}
 
 {% block content %}
 
@@ -15,19 +15,19 @@
                 <form action="{{ url_for('auth.logout') }}" method="post">
                     <button type="submit"
                         class="rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-black hover:bg-gray-400">
-                        Logout
+                        로그아웃
                     </button>
                 </form>
                 <a id="newProjectBtn" href="/create"
                     class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
-                    <span>+</span> New Project
+                    <span>+</span> 새 프로젝트
                 </a>
             </div>
         </div>
 
         <div class="flex gap-6 border-b">
-            <button class="pb-2 border-b-2 border-emerald-600 text-emerald-600 font-medium">Ongoing</button>
-            <button class="pb-2 text-gray-400">Completed</button>
+            <button class="pb-2 border-b-2 border-emerald-600 text-emerald-600 font-medium">진행 중</button>
+            <button class="pb-2 text-gray-400">완료</button>
         </div>
 
 
@@ -52,16 +52,16 @@
         <div class="space-y-4">
 
             <div class="flex items-center justify-between">
-                <span class="font-medium text-lg">Task Dashboard</span>
+                <span class="font-medium text-lg">태스크 대시보드</span>
 
                 <div class="flex items-center gap-2">
                     <button id="deleteTasksBtn"
                         class="hidden items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
-                        <span>🗑</span> Delete
+                        <span>🗑</span> 삭제
                     </button>
                     <button id="newTaskBtn"
                         class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all">
-                        <span>+</span> New Task
+                        <span>+</span> 새 태스크
                     </button>
                 </div>
             </div>
@@ -70,11 +70,11 @@
                 <thead>
                     <tr class="text-left text-gray-400 border-b">
                         <th class="py-2 w-10"></th>
-                        <th class="py-2 w-10">No.</th>
-                        <th class="py-2">Agenda</th>
-                        <th class="py-2">Due Date</th>
-                        <th class="py-2">Owner</th>
-                        <th class="py-2">Status</th>
+                        <th class="py-2 w-10">번호</th>
+                        <th class="py-2">내용</th>
+                        <th class="py-2">기한</th>
+                        <th class="py-2">담당자</th>
+                        <th class="py-2">상태</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -87,28 +87,28 @@
             <div class="bg-white rounded-xl p-6 w-96 space-y-4">
 
                 <div class="flex justify-between items-center">
-                    <span class="font-medium text-lg">New Task</span>
+                    <span class="font-medium text-lg">새 태스크</span>
                     <button id="closeModalBtn" class="text-gray-400">✕</button>
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-sm font-medium text-gray-700">Agenda</label>
-                    <input id="taskAgenda" placeholder="e.g. Write deploy script" class="border w-full p-2 rounded">
+                    <label class="text-sm font-medium text-gray-700">내용</label>
+                    <input id="taskAgenda" placeholder="태스크 내용을 입력하세요" class="border w-full p-2 rounded">
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-sm font-medium text-gray-700">Due Date</label>
+                    <label class="text-sm font-medium text-gray-700">기한</label>
                     <input id="taskDueDate" type="date" class="border w-full p-2 rounded">
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-sm font-medium text-gray-700">Owner</label>
+                    <label class="text-sm font-medium text-gray-700">담당자</label>
                     <select id="taskOwner" class="border w-full p-2 rounded">
-                        <option value="">Select a member</option>
+                        <option value="">담당자를 선택하세요</option>
                     </select>
                 </div>
 
-                <button id="submitTask" class="bg-emerald-500 text-white px-4 py-2 rounded-lg w-full">Add</button>
+                <button id="submitTask" class="bg-emerald-500 text-white px-4 py-2 rounded-lg w-full">추가</button>
             </div>
         </div>
 
