@@ -25,6 +25,11 @@ spec.loader.exec_module(task_module)
 
 
 class DashboardProgressTest(unittest.TestCase):
+    def setUp(self):
+        projects.reset_mock()
+        tasks.reset_mock()
+        tasks.count_documents.side_effect = None
+
     def test_progress_uses_completed_task_ratio(self):
         project = {"_id": ObjectId()}
         projects.find.return_value = [project]
@@ -37,6 +42,32 @@ class DashboardProgressTest(unittest.TestCase):
             self.assertEqual(task_module.dashboard(), "dashboard")
 
         self.assertEqual(project["progress"], 75)
+
+    def test_task_fields_are_validated_and_updated(self):
+        task_id = ObjectId()
+        project_id = ObjectId()
+        tasks.find_one.return_value = {"_id": task_id, "project_id": project_id}
+        tasks.update_one.return_value = Mock(matched_count=1)
+        projects.find_one.return_value = {"_id": project_id}
+        app = Flask(__name__)
+
+        with app.test_request_context(
+            f"/api/tasks/{task_id}", method="PATCH", json={"agenda": "   "}
+        ):
+            g.user = {"email": "tester@example.com"}
+            _, status = task_module.update_task(str(task_id))
+        self.assertEqual(status, 400)
+        tasks.update_one.assert_not_called()
+
+        with app.test_request_context(
+            f"/api/tasks/{task_id}", method="PATCH", json={"agenda": "  수정된 태스크  "}
+        ):
+            g.user = {"email": "tester@example.com"}
+            _, status = task_module.update_task(str(task_id))
+        self.assertEqual(status, 200)
+        tasks.update_one.assert_called_once_with(
+            {"_id": task_id}, {"$set": {"agenda": "수정된 태스크"}}
+        )
 
 
 if __name__ == "__main__":

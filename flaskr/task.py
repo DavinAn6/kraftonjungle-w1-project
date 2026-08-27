@@ -139,6 +139,17 @@ def update_task(task_id):
     updates = {k: v for k, v in data.items() if k in allowed_fields}
     if not updates:
         return jsonify({"error": "No valid fields"}), 400
+
+    text_fields = {"agenda", "due_date", "owner"}
+    if any(
+        field in updates
+        and (not isinstance(updates[field], str) or not updates[field].strip())
+        for field in text_fields
+    ):
+        return jsonify({"error": "Invalid field value"}), 400
+    for field in text_fields & updates.keys():
+        updates[field] = updates[field].strip()
+
     if "status" in updates and updates["status"] not in TASK_STATUSES:
         return jsonify({"error": "Invalid status"}), 400
 
