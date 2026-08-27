@@ -81,6 +81,19 @@ class DashboardProgressTest(unittest.TestCase):
         self.assertEqual(status, 400)
         tasks.update_one.assert_not_called()
 
+    def test_get_tasks_returns_project_members(self):
+        project_id = ObjectId()
+        members = [{"name": "tester", "email": "tester@example.com"}]
+        projects.find_one.return_value = {"_id": project_id, "members": members}
+        tasks.find.return_value = []
+        app = Flask(__name__)
+
+        with app.test_request_context(f"/api/tasks/{project_id}"):
+            g.user = {"email": "tester@example.com"}
+            response = task_module.get_tasks(str(project_id))
+
+        self.assertEqual(response.get_json(), {"members": members, "tasks": []})
+
 
 if __name__ == "__main__":
     unittest.main()

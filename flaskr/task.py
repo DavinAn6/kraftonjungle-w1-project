@@ -47,10 +47,6 @@ def get_tasks(project_id):
     project = find_member_project(project_oid)
     if not project:
         return jsonify({"error": "Project not found"}), 404
-    if data["owner"] not in {
-        member.get("name") for member in project.get("members", [])
-    }:
-        return jsonify({"error": "Invalid owner"}), 400
 
     tasks = list(tasks_col.find({"project_id": project_oid}))
     return jsonify(
@@ -85,6 +81,10 @@ def add_task():
     project = find_member_project(project_oid)
     if not project:
         return jsonify({"error": "Project not found"}), 404
+    if data["owner"] not in {
+        member.get("name") for member in project.get("members", [])
+    }:
+        return jsonify({"error": "Invalid owner"}), 400
 
     task = {
         "project_id": ObjectId(data["project_id"]),
