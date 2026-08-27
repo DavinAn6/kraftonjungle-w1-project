@@ -138,6 +138,28 @@ $(document).ready(function () {
         });
     });
 
+    $(document).on("change", ".task-field", function () {
+        const $field = $(this);
+        const value = $field.val().trim();
+
+        if (!value) {
+            alert("빈 값으로 수정할 수 없습니다.");
+            loadTasks(currentProjectId);
+            return;
+        }
+
+        $.ajax({
+            url: "/api/tasks/" + $field.closest("tr").data("task-id"),
+            method: "PATCH",
+            contentType: "application/json",
+            data: JSON.stringify({ [$field.data("field")]: value }),
+            error: function () {
+                alert("태스크 수정에 실패했습니다.");
+                loadTasks(currentProjectId);
+            }
+        });
+    });
+
 
 });
 
@@ -153,17 +175,26 @@ function populateOwnerDropdown(members) {
 }
 
 function buildTaskRow(task, index) {
-    const agenda = $("<div>").text(task.agenda ?? "").html();
-    const dueDate = $("<div>").text(task.due_date ?? "").html();
-    const owner = $("<div>").text(task.owner ?? "").html();
+    const agenda = escapeAttribute(task.agenda);
+    const dueDate = escapeAttribute(task.due_date);
+    const owner = escapeAttribute(task.owner);
 
     return `
     <tr class="border-b" data-task-id="${task._id}">
       <td class="py-3 pl-3"><input type="checkbox"></td>
       <td class="py-3 text-gray-400">${index}</td>
-      <td class="py-3">${agenda}</td>
-      <td class="py-3">${dueDate}</td>
-      <td class="py-3">${owner}</td>
+      <td class="py-3">
+        <input type="text" value="${agenda}" data-field="agenda" aria-label="태스크 내용"
+               class="task-field w-full rounded border border-transparent bg-transparent px-1 outline-none hover:border-gray-300 focus:border-emerald-500 focus:bg-white">
+      </td>
+      <td class="py-3">
+        <input type="date" value="${dueDate}" data-field="due_date" aria-label="태스크 기한"
+               class="task-field rounded border border-transparent bg-transparent px-1 outline-none hover:border-gray-300 focus:border-emerald-500 focus:bg-white">
+      </td>
+      <td class="py-3">
+        <input type="text" value="${owner}" data-field="owner" aria-label="태스크 담당자"
+               class="task-field w-full rounded border border-transparent bg-transparent px-1 outline-none hover:border-gray-300 focus:border-emerald-500 focus:bg-white">
+      </td>
       <td class="py-3">
         <select class="rounded-full border-0 px-3 py-1 text-xs font-medium"
                 data-task-id="${task._id}"
@@ -175,6 +206,11 @@ function buildTaskRow(task, index) {
       </td>
     </tr>
   `;
+}
+
+function escapeAttribute(value) {
+    const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    return String(value ?? "").replace(/[&<>"']/g, character => entities[character]);
 }
 
 function updateTaskStatus(select) {
