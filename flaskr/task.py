@@ -36,11 +36,17 @@ def get_tasks(project_id):
         return jsonify({"error": "Invalid project id"}), 400
 
     project_oid = ObjectId(project_id)
-    if not find_member_project(project_oid):
+    project = find_member_project(project_oid)
+    if not project:
         return jsonify({"error": "Project not found"}), 404
 
     tasks = list(tasks_col.find({"project_id": project_oid}))
-    return jsonify([serialize_task(t) for t in tasks])
+    return jsonify(
+        {
+            "members": project.get("members", []),
+            "tasks": [serialize_task(t) for t in tasks],
+        }
+    )
 
 
 @task.route("/api/tasks", methods=["POST"])
