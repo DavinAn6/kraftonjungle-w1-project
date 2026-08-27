@@ -12,14 +12,15 @@ $(document).ready(function () {
         $.ajax({
             url: "/api/tasks/" + projectId,
             method: "GET",
-            success: function (tasks) {
+            success: function (response) {
                 $("tbody").empty(); // 1. clear old rows
 
-                tasks.forEach(function (task, index) {  // 2. loop through each task
+                response.tasks.forEach(function (task, index) {  // 2. loop through each task
                     $("tbody").append(buildTaskRow(task, index + 1));
                 });
                 $("tbody select").each(function () { updateStatusColor(this); });
                 $("#deleteTasksBtn").addClass("hidden");
+                populateOwnerDropdown(response.members);
             }
         });
     }
@@ -47,7 +48,7 @@ $(document).ready(function () {
     // open modal
     $("#newTaskBtn").on("click", function () {
         if (!currentProjectId) {
-            alert("Select a project first");
+            alert("프로젝트를 먼저 선택해주세요.");
             return;
         }
         $("#taskModal").removeClass("hidden");
@@ -58,6 +59,7 @@ $(document).ready(function () {
         if (e.target.id === "closeModalBtn" || e.target.id === "taskModal") {
             $("#taskModal").addClass("hidden");
             $("#taskModal input").val(""); // clear form fields on close
+            $("#taskOwner").val("");
         }
     });
 
@@ -95,9 +97,10 @@ $(document).ready(function () {
                 updateStatusColor($("tbody tr:last select")[0]);
                 $("#taskModal").addClass("hidden");
                 $("#taskModal input").val("");
+                $("#taskOwner").val("");
             },
             error: function (xhr) {
-                alert(xhr.responseJSON?.error || "Task 저장에 실패했습니다.");
+                alert(xhr.responseJSON?.error || "태스크 저장에 실패했습니다.");
             }
         });
     }
@@ -121,7 +124,7 @@ $(document).ready(function () {
             idsToDelete.push($(this).closest("tr").data("task-id"));
         });
 
-        if (!confirm(`Delete ${idsToDelete.length} task(s)?`)) return;
+        if (!confirm(`선택한 태스크 ${idsToDelete.length}개를 삭제하시겠습니까?`)) return;
 
         $.ajax({
             url: "/api/tasks",
@@ -137,6 +140,17 @@ $(document).ready(function () {
 
 
 });
+
+function populateOwnerDropdown(members) {
+    const $select = $("#taskOwner").empty();
+    $("<option>").val("").text("담당자를 선택하세요").appendTo($select);
+
+    members.forEach(function (member) {
+        if (!member.name) return;
+        const label = member.email ? `${member.name} (${member.email})` : member.name;
+        $("<option>").val(member.name).text(label).appendTo($select);
+    });
+}
 
 function buildTaskRow(task, index) {
     const agenda = $("<div>").text(task.agenda ?? "").html();
@@ -154,9 +168,9 @@ function buildTaskRow(task, index) {
         <select class="rounded-full border-0 px-3 py-1 text-xs font-medium"
                 data-task-id="${task._id}"
                 onchange="updateStatusColor(this); updateTaskStatus(this);">
-          <option value="not-started" ${task.status === "not-started" ? "selected" : ""}>Not started</option>
-          <option value="in-progress" ${task.status === "in-progress" ? "selected" : ""}>In progress</option>
-          <option value="done" ${task.status === "done" ? "selected" : ""}>Done</option>
+          <option value="not-started" ${task.status === "not-started" ? "selected" : ""}>시작 전</option>
+          <option value="in-progress" ${task.status === "in-progress" ? "selected" : ""}>진행 중</option>
+          <option value="done" ${task.status === "done" ? "selected" : ""}>완료</option>
         </select>
       </td>
     </tr>
