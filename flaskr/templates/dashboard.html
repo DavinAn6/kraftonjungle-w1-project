@@ -4,8 +4,6 @@
 {% block content %}
 
 <div class="max-w-6xl mx-auto space-y-6">
-    <img src="{{ url_for('static', filename='JungleTrek Logo.png')}}" class="w-full rounded-x1 mb-6"
-        alt="JungleTrek Banner">
     <div class="bg-white rounded-xl border p-6 space-y-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -31,17 +29,34 @@
         </div>
 
 
-        <div class="grid grid-cols-3 gap-4">
+        <div class="flex gap-4 overflow-x-auto pb-2">
             {% for p in projects %}
-            <div class="project-card border rounded-xl p-4 space-y-3 cursor-pointer {% if loop.first %}border-2 bg-emerald-50{% else %}border{% endif %}"
+            <div class="project-card border rounded-xl p-4 space-y-3 cursor-pointer flex-shrink-0 w-72 {% if loop.first %}border-2 border-emerald-300 bg-emerald-50{% else %}border{% endif %}"
                 data-project="{{ p._id }}">
                 <div class="flex items-center justify-between">
                     <span class="font-medium">{{ p.title }}</span>
-                    <a href="/projects/{{ p._id }}" class="text-gray-400 hover:text-emerald-600 text-sm"
-                        onclick="event.stopPropagation();">
-                        ➡
+                    <a href="/projects/{{ p._id }}" onclick="event.stopPropagation();"
+                        class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-emerald-100 hover:text-emerald-600 transition-colors">
+                        <span class="text-sm">➡</span>
                     </a>
                 </div>
+
+                <div class="text-xs text-gray-500">
+                    시작 {{ p.start_date }} · 종료 {{ p.end_date }}
+                </div>
+
+                <div class="flex flex-wrap gap-1">
+                    {% for member in p.members %}
+                    <span class="rounded-full border border-gray-300 bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                        {{ member.name }}
+                    </span>
+                    {% endfor %}
+                </div>
+
+                <div class="h-1.5 w-full rounded-full bg-gray-200">
+                    <div class="h-1.5 rounded-full bg-emerald-500" style="width: {{ p.progress }}%"></div>
+                </div>
+                <div class="text-xs text-gray-400">{{ p.progress }}% 완료</div>
             </div>
             {% endfor %}
         </div>
