@@ -13,6 +13,10 @@
 </head>
 
 <body class="bg-black min-h-screen">
+    <div class="w-full max-w-4xl mx-auto mb-6">
+        <img src="{{ url_for('static', filename='JungleTrek Logo.png') }}" class="w-full rounded-xl block"
+            alt="JungleTrek Banner">
+    </div>
 
     <!-- Two Jinja blocks allow other html file code to be inserted in between, eliminating need for repeated code -->
     {% block content %}{% endblock %}

@@ -22,6 +22,14 @@ def find_member_project(project_id):
 def dashboard():
     """현재 사용자가 참여 중인 프로젝트 대시보드입니다."""
     projects = list(projects_col.find({"members.email": g.user["email"]}))
+
+    for project in projects:
+        total = tasks_col.count_documents({"project_id": project["_id"]})
+        done = tasks_col.count_documents(
+            {"project_id": project["_id"], "status": "done"}
+        )
+        project["progress"] = round(done / total * 100) if total else 0
+
     return render_template("dashboard.html", projects=projects, name=g.user["name"])
 
 

@@ -1,0 +1,61 @@
+name: Jungle to EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          version: "0.12.6"
+
+      - name: Test
+        run: |
+          uv sync --frozen
+          uv run python tests/test_auth_access.py
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/ec2_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/ec2_key ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          ssh -i ~/.ssh/ec2_key ubuntu@"$EC2_HOST" <<'REMOTE'
+            set -eu
+
+            cd /srv/jungletrek
+            git pull --ff-only origin main
+            "$HOME/.local/bin/uv" sync --frozen
+
+            sudo systemctl restart jungletrek
+            sudo systemctl is-active --quiet jungletrek
+
+            test "$(curl -s -o /dev/null -w '%{http_code}' \
+              http://127.0.0.1/health)" = "200"
+          REMOTE

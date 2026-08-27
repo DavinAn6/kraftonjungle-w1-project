@@ -40,8 +40,8 @@ $(document).ready(function () {
     // 5. click handler, unchanged except it also calls loadTasks
     $(".project-card").on("click", function () {
         currentProjectId = $(this).data("project");
-        $(".project-card").removeClass("border-2 bg-emerald-50").addClass("border");
-        $(this).removeClass("border").addClass("border-2 bg-emerald-50");
+        $(".project-card").removeClass("border-2 border-emerald-300 bg-emerald-50").addClass("border");
+        $(this).removeClass("border").addClass("border-2 border-emerald-300 bg-emerald-50");
         loadTasks(currentProjectId);
     });
 
