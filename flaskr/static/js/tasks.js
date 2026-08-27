@@ -1,6 +1,7 @@
 $(document).ready(function () {
     // 1. figure out the default (mirrors what Jinja already picked)
     let currentProjectId = $(".project-card").first().data("project");
+    let currentMembers = [];
 
     // 2. for viewing different projects / reusable function
     function loadTasks(projectId) {
@@ -14,13 +15,14 @@ $(document).ready(function () {
             method: "GET",
             success: function (response) {
                 $("tbody").empty(); // 1. clear old rows
+                currentMembers = response.members ?? [];
 
                 response.tasks.forEach(function (task, index) {  // 2. loop through each task
-                    $("tbody").append(buildTaskRow(task, index + 1));
+                    $("tbody").append(buildTaskRow(task, index + 1, currentMembers));
                 });
-                $("tbody select").each(function () { updateStatusColor(this); });
+                $("tbody select[data-task-id]").each(function () { updateStatusColor(this); });
                 $("#deleteTasksBtn").addClass("hidden");
-                populateOwnerDropdown(response.members);
+                populateOwnerDropdown(currentMembers);
             }
         });
     }
@@ -93,8 +95,8 @@ $(document).ready(function () {
             data: JSON.stringify(task),
             success: function (newTask) {
                 const rowCount = $("tbody tr").length + 1;
-                $("tbody").append(buildTaskRow(newTask, rowCount));
-                updateStatusColor($("tbody tr:last select")[0]);
+                $("tbody").append(buildTaskRow(newTask, rowCount, currentMembers));
+                updateStatusColor($("tbody tr:last select[data-task-id]")[0]);
                 $("#taskModal").addClass("hidden");
                 $("#taskModal input").val("");
                 $("#taskOwner").val("");
@@ -174,10 +176,10 @@ function populateOwnerDropdown(members) {
     });
 }
 
-function buildTaskRow(task, index) {
+function buildTaskRow(task, index, members) {
     const agenda = escapeAttribute(task.agenda);
     const dueDate = escapeAttribute(task.due_date);
-    const owner = escapeAttribute(task.owner);
+    const ownerOptions = buildOwnerOptions(members, task.owner);
 
     return `
     <tr class="border-b" data-task-id="${task._id}">
@@ -192,8 +194,10 @@ function buildTaskRow(task, index) {
                class="task-field rounded border border-transparent bg-transparent px-1 outline-none hover:border-gray-300 focus:border-emerald-500 focus:bg-white">
       </td>
       <td class="py-3">
-        <input type="text" value="${owner}" data-field="owner" aria-label="태스크 담당자"
-               class="task-field w-full rounded border border-transparent bg-transparent px-1 outline-none hover:border-gray-300 focus:border-emerald-500 focus:bg-white">
+        <select data-field="owner" aria-label="태스크 담당자"
+                class="task-field w-full rounded border border-transparent bg-transparent px-1 outline-none hover:border-gray-300 focus:border-emerald-500 focus:bg-white">
+          ${ownerOptions}
+        </select>
       </td>
       <td class="py-3">
         <select class="rounded-full border-0 px-3 py-1 text-xs font-medium"
@@ -211,6 +215,22 @@ function buildTaskRow(task, index) {
 function escapeAttribute(value) {
     const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
     return String(value ?? "").replace(/[&<>"']/g, character => entities[character]);
+}
+
+function buildOwnerOptions(members, currentOwner) {
+    const options = [...(members ?? [])];
+    if (currentOwner && !options.some(member => member.name === currentOwner)) {
+        options.unshift({ name: currentOwner });
+    }
+
+    return options
+        .filter(member => member.name)
+        .map(function (member) {
+            const selected = member.name === currentOwner ? " selected" : "";
+            const label = member.email ? `${member.name} (${member.email})` : member.name;
+            return `<option value="${escapeAttribute(member.name)}"${selected}>${escapeAttribute(label)}</option>`;
+        })
+        .join("");
 }
 
 function updateTaskStatus(select) {
