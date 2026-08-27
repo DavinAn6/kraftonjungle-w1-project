@@ -47,6 +47,10 @@ def get_tasks(project_id):
     project = find_member_project(project_oid)
     if not project:
         return jsonify({"error": "Project not found"}), 404
+    if data["owner"] not in {
+        member.get("name") for member in project.get("members", [])
+    }:
+        return jsonify({"error": "Invalid owner"}), 400
 
     tasks = list(tasks_col.find({"project_id": project_oid}))
     return jsonify(
@@ -154,8 +158,13 @@ def update_task(task_id):
         return jsonify({"error": "Invalid status"}), 400
 
     task_doc = tasks_col.find_one({"_id": ObjectId(task_id)})
-    if not task_doc or not find_member_project(task_doc["project_id"]):
+    project = find_member_project(task_doc["project_id"]) if task_doc else None
+    if not project:
         return jsonify({"error": "Task not found"}), 404
+    if "owner" in updates and updates["owner"] not in {
+        member.get("name") for member in project.get("members", [])
+    }:
+        return jsonify({"error": "Invalid owner"}), 400
 
     result = tasks_col.update_one({"_id": ObjectId(task_id)}, {"$set": updates})
     if result.matched_count == 0:

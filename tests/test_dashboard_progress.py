@@ -48,7 +48,10 @@ class DashboardProgressTest(unittest.TestCase):
         project_id = ObjectId()
         tasks.find_one.return_value = {"_id": task_id, "project_id": project_id}
         tasks.update_one.return_value = Mock(matched_count=1)
-        projects.find_one.return_value = {"_id": project_id}
+        projects.find_one.return_value = {
+            "_id": project_id,
+            "members": [{"name": "tester", "email": "tester@example.com"}],
+        }
         app = Flask(__name__)
 
         with app.test_request_context(
@@ -68,6 +71,15 @@ class DashboardProgressTest(unittest.TestCase):
         tasks.update_one.assert_called_once_with(
             {"_id": task_id}, {"$set": {"agenda": "수정된 태스크"}}
         )
+
+        tasks.update_one.reset_mock()
+        with app.test_request_context(
+            f"/api/tasks/{task_id}", method="PATCH", json={"owner": "outsider"}
+        ):
+            g.user = {"email": "tester@example.com"}
+            _, status = task_module.update_task(str(task_id))
+        self.assertEqual(status, 400)
+        tasks.update_one.assert_not_called()
 
 
 if __name__ == "__main__":
